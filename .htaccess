@@ -1,0 +1,24 @@
+# ╔══════════════════════════════════════════════════════════╗
+# ║  BRITECH — .htaccess raíz                               ║
+# ╚══════════════════════════════════════════════════════════╝
+
+# Seguridad: ocultar archivos sensibles
+<FilesMatch "\.(sql|log|env|md)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Proteger carpeta config
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^models/ - [F,L]
+    RewriteRule ^controllers/ - [F,L]
+</IfModule>
+
+# Habilitar CORS para API
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+Options -Indexes

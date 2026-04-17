@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Britech — Sistema de Gestión</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header id="appHeader">
+  <!-- LOGO: reemplazá "logo.png" por tu archivo de imagen.
+       Si no hay imagen, se mostrará el ícono de texto por defecto. -->
+  <a class="logo-wrap" href="#">
+    <img class="logo-img" src="logo.png" alt="Britech logo" onerror="this.style.display='none';document.querySelector('.logo-img-fallback').style.display='flex'">
+    <div class="logo-img-fallback" style="display:none">B</div>
+    <div class="logo">Brit<span>ech</span></div>
+  </a>
+  <nav>
+    <button class="nav-btn active" data-section="inventario"><span class="nav-icon">📦</span>Inventario</button>
+    <button class="nav-btn" data-section="ventas"><span class="nav-icon">⚡</span>Ventas</button>
+    <button class="nav-btn" data-section="envios"><span class="nav-icon">🚚</span>Envíos</button>
+    <button class="nav-btn" data-section="reportes"><span class="nav-icon">📊</span>Reportes</button>
+    <button class="nav-btn" data-section="historial"><span class="nav-icon">🗂️</span>Historial</button>
+  </nav>
+</header>
+
+<div id="app">
+
+  <!-- ═══════════════ INVENTARIO ═══════════════ -->
+  <div id="inventario" class="section active">
+    <div class="page-header">
+      <div class="page-title"><small>Gestión de</small>Inventario</div>
+      <div class="page-actions">
+        <button class="btn btn-ghost" onclick="openModal('comboModal')">⭐ Gestionar Combos</button>
+        <button class="btn btn-white" onclick="openModal('productModal')">+ Agregar Producto</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="invStats"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="inv-tabla">Vista Tabla</button>
+      <button class="tab-btn" data-tab="inv-grid">Vista Tarjetas</button>
+      <button class="tab-btn" data-tab="inv-combos">Combos Definidos</button>
+    </div>
+
+    <div id="inv-tabla" class="tab-panel active">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Producto</th><th>Stock</th><th>P. Compra</th><th>P. Minorista</th><th>P. Mayorista</th><th>Imagen</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="invTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="inv-grid" class="tab-panel">
+      <div class="product-grid" id="invGrid"></div>
+    </div>
+
+    <div id="inv-combos" class="tab-panel">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Nombre</th><th>Productos</th><th>P. Minorista</th><th>P. Mayorista</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="combosTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ VENTAS ═══════════════ -->
+  <div id="ventas" class="section">
+    <div class="page-header">
+      <div class="page-title"><small>Gestión de</small>Ventas Rápidas</div>
+      <div class="page-actions">
+        <button class="btn btn-ghost" onclick="openModal('gastoModal')">💸 Registrar Gasto</button>
+        <button class="btn btn-ghost" onclick="openModal('inversionModal')">📥 Registrar Inversión</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="ventasStats"></div>
+
+    <!-- Banner envíos pendientes -->
+    <div id="pendingShipmentsBanner" style="display:none"></div>
+
+    <div class="sale-area">
+      <!-- Panel izquierdo -->
+      <div>
+        <div class="card mb-2">
+          <div class="card-header">
+            <span class="card-title">Agregar al carrito</span>
+            <div class="flex gap-1">
+              <select class="status-select" id="saleClientType" onchange="refreshSaleProductList()">
+                <option value="minorista">Minorista</option>
+                <option value="mayorista">Mayorista</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="field col-span-2">
+                <label>Producto o Combo</label>
+                <select id="saleProductSel" onchange="onSaleProductChange()">
+                  <option value="">— Seleccioná —</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Precio unitario</label>
+                <input type="number" id="salePriceInput" step="1" min="0" placeholder="0">
+              </div>
+              <div class="field">
+                <label>Cantidad</label>
+                <input type="number" id="saleQtyInput" value="1" min="1">
+              </div>
+            </div>
+            <div class="mt-2">
+              <button class="btn btn-gold btn-full" onclick="addToSaleCart()">+ Agregar al carrito</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Carrito</span><span id="cartCount" class="badge badge-gray">0 items</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Producto</th><th>P.Unit.</th><th>Cant.</th><th>Subtotal</th><th></th></tr></thead>
+              <tbody id="saleCartBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel derecho: resumen -->
+      <div>
+        <div class="cart-summary card">
+          <div class="card-header"><span class="card-title">Resumen del pedido</span></div>
+          <div class="card-body">
+            <div class="field mb-2">
+              <label>Cliente (opcional)</label>
+              <input type="text" id="saleClientName" placeholder="Nombre del cliente">
+            </div>
+            <div class="field mb-2">
+              <label>¿Incluye envío?</label>
+              <select id="saleHasShipping" onchange="toggleSaleShipping()">
+                <option value="no">No</option>
+                <option value="si">Sí</option>
+              </select>
+            </div>
+            <div class="field mb-2" id="saleShippingField" style="display:none">
+              <label>Costo de envío</label>
+              <input type="number" id="saleShippingCost" step="1" min="0" placeholder="0" oninput="recalcSaleTotal()">
+            </div>
+            <div class="field mb-2">
+              <label>Notas</label>
+              <textarea id="saleNotes" placeholder="Instrucciones, referencias..." rows="2"></textarea>
+            </div>
+          </div>
+          <div class="totals-box" style="margin:0 1.2rem 1.2rem;">
+            <div class="totals-row"><span>Subtotal</span><span id="saleSub">$0</span></div>
+            <div class="totals-row"><span>Envío</span><span id="saleShipShow">$0</span></div>
+            <div class="totals-row"><span>TOTAL</span><span id="saleTotal">$0</span></div>
+          </div>
+          <div style="padding:0 1.2rem 1.2rem;">
+            <button class="btn btn-white btn-full btn-lg" onclick="confirmSale()">✓ Confirmar Venta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ENVÍOS ═══════════════ -->
+  <div id="envios" class="section">
+    <div class="page-header">
+      <div class="page-title"><small>Gestión de</small>Envíos Locales</div>
+      <div class="page-actions">
+        <button class="btn btn-ghost" onclick="exportShipmentsToday()">📄 Exportar envíos del día (TXT)</button>
+        <button class="btn btn-white" onclick="openModal('shipModal')">+ Nuevo Envío</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="shipStats"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="envios-activos">Activos</button>
+      <button class="tab-btn" data-tab="envios-historial">Historial completo</button>
+    </div>
+
+    <div id="envios-activos" class="tab-panel active">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#ID</th><th>Cliente</th><th>Teléfono</th><th>Dirección</th><th>Productos</th><th>Tipo</th><th>Costo Envío</th><th>Total</th><th>Venta</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="shipTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="envios-historial" class="tab-panel">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#ID</th><th>Fecha</th><th>Cliente</th><th>Dirección</th><th>Total</th><th>Venta</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="shipHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ REPORTES ═══════════════ -->
+  <div id="reportes" class="section">
+    <div class="page-header">
+      <div class="page-title"><small>Estadísticas y</small>Reportes</div>
+      <div class="page-actions">
+        <button class="btn btn-ghost" onclick="downloadTxt()">⬇ Descargar TXT</button>
+        <button class="btn btn-white" onclick="renderReports()">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="reportStats"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem;" class="report-cols">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Productos más vendidos</span></div>
+        <div class="card-body"><div class="bar-chart" id="topProductsChart"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Ventas recientes</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th></tr></thead>
+            <tbody id="recentSalesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header"><span class="card-title">Movimientos de dinero</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Monto</th></tr></thead>
+          <tbody id="movimientosBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ HISTORIAL ═══════════════ -->
+  <div id="historial" class="section">
+    <div class="page-header">
+      <div class="page-title"><small>Historial</small>General</div>
+      <div class="page-actions">
+        <button class="btn btn-ghost" onclick="renderHistorial()">↻ Actualizar</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="hist-ventas">Ventas</button>
+      <button class="tab-btn" data-tab="hist-envios">Envíos</button>
+      <button class="tab-btn" data-tab="hist-stock">Stock</button>
+      <button class="tab-btn" data-tab="hist-money">Movimientos</button>
+    </div>
+    <div id="hist-ventas" class="tab-panel active">
+      <div class="card"><div class="table-wrap">
+        <table><thead><tr><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Productos</th><th>Total</th></tr></thead>
+        <tbody id="histVentasBody"></tbody></table>
+      </div></div>
+    </div>
+    <div id="hist-envios" class="tab-panel">
+      <div class="card"><div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Total</th></tr></thead>
+        <tbody id="histEnviosBody"></tbody></table>
+      </div></div>
+    </div>
+    <div id="hist-stock" class="tab-panel">
+      <div class="card"><div class="table-wrap">
+        <table><thead><tr><th>Fecha</th><th>Acción</th><th>Producto</th><th>Cantidad</th></tr></thead>
+        <tbody id="histStockBody"></tbody></table>
+      </div></div>
+    </div>
+    <div id="hist-money" class="tab-panel">
+      <div class="card"><div class="table-wrap">
+        <table><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Monto</th></tr></thead>
+        <tbody id="histMoneyBody"></tbody></table>
+      </div></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ═══════════════ TOASTS ═══════════════ -->
+<div class="alert-toast" id="toastContainer"></div>
+
+<!-- ═══════════════ MODALES ═══════════════ -->
+
+<!-- Modal: Agregar/Editar Producto -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3 id="productModalTitle">Agregar Producto</h3>
+      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <input type="hidden" id="editProductId">
+        <div class="field col-span-2">
+          <label>Nombre del producto *</label>
+          <input type="text" id="pName" placeholder="Ej: Cable USB-C 2m">
+        </div>
+        <div class="field">
+          <label>Precio de compra 🔒 (privado)</label>
+          <input type="number" id="pCompra" step="1" min="0" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Stock inicial</label>
+          <input type="number" id="pStock" min="0" value="0" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Precio minorista *</label>
+          <input type="number" id="pMinorista" step="1" min="0" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Precio mayorista *</label>
+          <input type="number" id="pMayorista" step="1" min="0" placeholder="0">
+        </div>
+        <div class="field col-span-2">
+          <label>Descripción (opcional)</label>
+          <textarea id="pDesc" placeholder="Descripción del producto..."></textarea>
+        </div>
+        <div class="field col-span-2">
+          <label>Imágenes (máx. 3) — arrastrá, pegá o hacé click</label>
+          <div class="img-drop-zone" id="pImgZone">
+            <input type="file" id="pImgInput" accept="image/*" multiple>
+            <div class="img-previews" id="pImgPreviews"></div>
+            <span class="img-drop-icon">📸</span>
+            <p class="img-drop-text">Arrastrá imágenes aquí · Click para seleccionar · Pegá con Ctrl+V</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('productModal')">Cancelar</button>
+      <button class="btn btn-white" onclick="saveProduct()">Guardar Producto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle Producto -->
+<div class="modal-overlay" id="productInfoModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Información del Producto</h3>
+      <button class="modal-close" onclick="closeModal('productInfoModal')">✕</button>
+    </div>
+    <div class="modal-body" id="productInfoBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('productInfoModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Combos -->
+<div class="modal-overlay" id="comboModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3>Gestionar Combos</h3>
+      <button class="modal-close" onclick="closeModal('comboModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid mb-2">
+        <div class="field col-span-2">
+          <label>Nombre del combo *</label>
+          <input type="text" id="cName" placeholder="Ej: Kit Cabezal + Cable">
+        </div>
+        <div class="field">
+          <label>Precio minorista *</label>
+          <input type="number" id="cMinorista" step="1" min="0" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Precio mayorista *</label>
+          <input type="number" id="cMayorista" step="1" min="0" placeholder="0">
+        </div>
+        <div class="field col-span-2">
+          <label>Productos del combo (mín. 2)</label>
+          <div class="check-list" id="comboCheckList"></div>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="saveCombo()">+ Crear Combo</button>
+      <div class="divider"></div>
+      <p style="font-size:0.8rem;color:var(--text3);margin-bottom:0.8rem;letter-spacing:0.05em;text-transform:uppercase;">Combos guardados</p>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Productos</th><th>Minorista</th><th>Mayorista</th><th></th></tr></thead>
+        <tbody id="comboInlineBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nuevo Envío -->
+<div class="modal-overlay" id="shipModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3 id="shipModalTitle">Nuevo Envío</h3>
+      <button class="modal-close" onclick="closeModal('shipModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <input type="hidden" id="editShipId">
+        <div class="field">
+          <label>Cliente *</label>
+          <input type="text" id="shClient" placeholder="Nombre del cliente">
+        </div>
+        <div class="field">
+          <label>Teléfono *</label>
+          <input type="tel" id="shPhone" placeholder="+54 ...">
+        </div>
+        <div class="field col-span-2">
+          <label>Dirección *</label>
+          <input type="text" id="shAddress" placeholder="Calle, número, localidad">
+        </div>
+        <div class="field">
+          <label>Tipo de cliente</label>
+          <select id="shClientType" onchange="refreshShipProductList()">
+            <option value="minorista">Minorista</option>
+            <option value="mayorista">Mayorista</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Costo de envío</label>
+          <input type="number" id="shShipping" step="1" min="0" placeholder="0" oninput="recalcShipTotal()">
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="shStatus">
+            <option value="pendiente">Pendiente</option>
+            <option value="en_camino">En camino</option>
+            <option value="entregado">Entregado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Notas</label>
+          <input type="text" id="shNotes" placeholder="Referencia, timbre...">
+        </div>
+        <div class="field col-span-2">
+          <label>Venta asociada (opcional)</label>
+          <select id="shLinkedSale">
+            <option value="">Sin venta asociada</option>
+          </select>
+          <span class="field-hint">Podés vincular este envío a una venta existente (no es obligatorio)</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <p style="font-size:0.8rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.8rem;">Productos del envío</p>
+      <div class="form-grid cols-3 mb-2">
+        <div class="field col-span-2">
+          <label>Producto / Combo</label>
+          <select id="shProductSel" onchange="onShipProductChange()">
+            <option value="">— Seleccioná —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input type="number" id="shQty" value="1" min="1">
+        </div>
+      </div>
+      <button class="btn btn-ghost mb-2" onclick="addToShipCart()">+ Agregar producto</button>
+      <div class="table-wrap">
+        <table><thead><tr><th>Producto</th><th>P.Unit.</th><th>Cant.</th><th>Subtotal</th><th></th></tr></thead>
+        <tbody id="shipCartBody"></tbody></table>
+      </div>
+      <div class="totals-box">
+        <div class="totals-row"><span>Subtotal productos</span><span id="shipSubShow">$0</span></div>
+        <div class="totals-row"><span>Costo envío</span><span id="shipShipShow">$0</span></div>
+        <div class="totals-row"><span>TOTAL</span><span id="shipTotalShow">$0</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('shipModal')">Cancelar</button>
+      <button class="btn btn-white" onclick="saveShipment()">Guardar Envío</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Gasto -->
+<div class="modal-overlay" id="gastoModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Registrar Gasto</h3>
+      <button class="modal-close" onclick="closeModal('gastoModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid cols-1">
+        <div class="field"><label>Descripción *</label><input type="text" id="gastoDesc" placeholder="Ej: Alquiler depósito, compra caja..."></div>
+        <div class="field"><label>Monto *</label><input type="number" id="gastoMonto" step="1" min="0" placeholder="0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('gastoModal')">Cancelar</button>
+      <button class="btn btn-danger" onclick="saveGasto()">Registrar Gasto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Inversión -->
+<div class="modal-overlay" id="inversionModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Registrar Inversión / Compra de Stock</h3>
+      <button class="modal-close" onclick="closeModal('inversionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid cols-1">
+        <div class="field"><label>Descripción *</label><input type="text" id="invDesc" placeholder="Ej: Compra 50 unidades Cable USB-C"></div>
+        <div class="field"><label>Monto invertido *</label><input type="number" id="invMonto" step="1" min="0" placeholder="0"></div>
+        <div class="field">
+          <label>¿Actualizar stock de un producto?</label>
+          <select id="invProductSel">
+            <option value="">No actualizar stock</option>
+          </select>
+        </div>
+        <div class="field" id="invStockField" style="display:none">
+          <label>Cantidad a sumar al stock</label>
+          <input type="number" id="invStockQty" min="1" value="1">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('inversionModal')">Cancelar</button>
+      <button class="btn btn-success" onclick="saveInversion()">Registrar Inversión</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver detalle envío -->
+<div class="modal-overlay" id="shipDetailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Detalle del Envío</h3>
+      <button class="modal-close" onclick="closeModal('shipDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="shipDetailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('shipDetailModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════╗
+// ║              BRITECH — SISTEMA DE GESTIÓN               ║
+// ║         Inventario · Ventas · Envíos · Reportes         ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// ══════════════ BASE DE DATOS (API / PHP) ══════════════
+const API_STORAGE = '../api/storage.php';
+const PRODUCT_API = '../api/productos.php';
+const CACHE = {
+  products: null,
+  combos: null,
+  sales: null,
+  shipments: null,
+  money: null,
+  stockLog: null,
+};
+
+const DB = {
+  get: k => {
+    if (k === 'products') {
+      if (CACHE.products !== null) return CACHE.products;
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', PRODUCT_API, false);
+        xhr.send();
+        if (xhr.status === 200 && xhr.responseText) {
+          const res = JSON.parse(xhr.responseText);
+          if (res.ok && Array.isArray(res.data)) {
+            CACHE.products = res.data.map(normalizeProduct);
+            return CACHE.products;
+          }
+        }
+      } catch (error) {
+        console.error('DB.get products error', error);
+      }
+      CACHE.products = [];
+      return CACHE.products;
+    }
+
+    if (CACHE[k] !== null) return CACHE[k];
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `${API_STORAGE}?entity=${encodeURIComponent(k)}`, false);
+      xhr.send();
+      if (xhr.status === 200 && xhr.responseText) {
+        const res = JSON.parse(xhr.responseText);
+        if (res.ok && Array.isArray(res.data)) {
+          CACHE[k] = res.data;
+          return CACHE[k];
+        }
+      }
+    } catch (error) {
+      console.error('DB.get error', error);
+    }
+    CACHE[k] = [];
+    return CACHE[k];
+  },
+
+  set: (k, v) => {
+    CACHE[k] = Array.isArray(v) ? v : v;
+    if (k === 'products') {
+      return CACHE[k];
+    }
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', API_STORAGE, false);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify({ entity: k, data: CACHE[k] }));
+      if (xhr.status === 200 && xhr.responseText) {
+        const res = JSON.parse(xhr.responseText);
+        if (res.ok) return CACHE[k];
+      }
+    } catch (error) {
+      console.error('DB.set error', error);
+    }
+    return CACHE[k];
+  },
+
+  getObj: (k, d = {}) => {
+    if (CACHE[k] !== null) return CACHE[k];
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `${API_STORAGE}?entity=${encodeURIComponent(k)}`, false);
+      xhr.send();
+      if (xhr.status === 200 && xhr.responseText) {
+        const res = JSON.parse(xhr.responseText);
+        if (res.ok && typeof res.data === 'object' && res.data !== null) {
+          CACHE[k] = res.data;
+          return CACHE[k];
+        }
+      }
+    } catch (error) {
+      console.error('DB.getObj error', error);
+    }
+    CACHE[k] = d;
+    return d;
+  },
+
+  setObj: (k, v) => DB.set(k, v)
+};
+
+async function apiFetch(endpoint, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+
+  try {
+    const res = await fetch(endpoint.startsWith('/') ? `..${endpoint}` : endpoint, opts);
+    const data = await res.json();
+    if (res.ok) return data;
+    console.error('apiFetch error', data);
+    return null;
+  } catch (error) {
+    console.error('apiFetch exception', error);
+    return null;
+  }
+}
+
+function normalizeProduct(row) {
+  return {
+    id: row.id_producto || row.id || '',
+    name: row.nombre || '',
+    desc: row.descripcion || '',
+    stock: parseInt(row.stock || 0, 10),
+    compra: parseFloat(row.compra || 0) || 0,
+    minorista: parseFloat(row.precio_minorista || 0) || 0,
+    mayorista: parseFloat(row.precio_mayorista || 0) || 0,
+    images: Array.isArray(row.imagenes) ? row.imagenes : (row.imagenes ? row.imagenes : []),
+    activo: row.activo !== undefined ? Boolean(row.activo) : true,
+  };
+}
+
+async function updateProductInDB(product) {
+  return apiFetch(PRODUCT_API, 'PUT', {
+    id: product.id,
+    nombre: product.name,
+    descripcion: product.desc,
+    stock: product.stock,
+    compra: product.compra,
+    precio_minorista: product.minorista,
+    precio_mayorista: product.mayorista,
+    imagenes: product.images,
+  });
+}
+
+async function updateProductsInDB(products) {
+  for (const product of products) {
+    await updateProductInDB(product);
+  }
+  window._products = null;
+  return true;
+}
+
+async function loadProducts() {
+  if (Array.isArray(CACHE.products) && CACHE.products.length) return CACHE.products;
+  const res = await apiFetch(PRODUCT_API, 'GET');
+  if (!res || !res.ok) {
+    CACHE.products = [];
+    return CACHE.products;
+  }
+  CACHE.products = res.data.map(normalizeProduct);
+  return CACHE.products;
+}
+
+const uid = () => Date.now() + Math.random().toString(36).slice(2,6);
+
+// ══════════════ FORMATO DE PRECIOS (sin decimales, con separador de miles) ══════════════
+function fmt(n) {
+  const val = Math.round(parseFloat(n) || 0);
+  return '$' + val.toLocaleString('es-AR');
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('es-AR',{
+    day:'2-digit', month:'2-digit', year:'2-digit',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function fmtDateShort(d) {
+  return new Date(d).toLocaleDateString('es-AR',{
+    day:'2-digit', month:'2-digit', year:'2-digit'
+  });
+}
+
+// ══════════════ TOAST ══════════════
+function toast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ══════════════ NAV ══════════════
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    const sec = btn.dataset.section;
+    document.getElementById(sec).classList.add('active');
+    if(sec==='inventario') await renderInventario();
+    if(sec==='ventas')     { renderVentasStats(); refreshSaleProductList(); renderPendingShipmentsBanner(); }
+    if(sec==='envios')     { renderEnvios(); renderShipStats(); renderShipHistory(); }
+    if(sec==='reportes')   renderReports();
+    if(sec==='historial')  renderHistorial();
+  });
+});
+
+// ══════════════ TABS ══════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const panel = btn.dataset.tab;
+    const parent = btn.closest('.section') || btn.closest('.modal-body') || document.body;
+    const container = btn.parentElement;
+    container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const panels = parent.querySelectorAll('.tab-panel');
+    panels.forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(panel);
+    if(target) target.classList.add('active');
+    if(panel==='inv-combos')      renderCombosTable();
+    if(panel==='envios-historial') renderShipHistory();
+    if(panel==='hist-ventas')     renderHistVentas();
+    if(panel==='hist-envios')     renderHistEnvios();
+    if(panel==='hist-stock')      renderHistStock();
+    if(panel==='hist-money')      renderHistMoney();
+  });
+});
+
+// ══════════════ MODALES ══════════════
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (id === 'productModal') resetProductModal();
+  el.classList.add('open');
+  if(id==='comboModal')      { fillComboCheckList(); renderComboInline(); }
+  if(id==='shipModal')       { refreshShipProductList(); fillLinkedSaleSelect(); }
+  if(id==='inversionModal')  { fillInversionProductSel(); }
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+
+// ══════════════ IMÁGENES ══════════════
+let pendingImages = [];
+
+function setupImageZone(zoneId, inputId, previewId) {
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  if(!zone) return;
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    [...e.dataTransfer.files].forEach(f => processImgFile(f, previewId));
+  });
+  input.addEventListener('change', e => {
+    [...e.target.files].forEach(f => processImgFile(f, previewId));
+    input.value = '';
+  });
+  document.addEventListener('paste', e => {
+    if(!document.getElementById('productModal').classList.contains('open')) return;
+    [...e.clipboardData.items].forEach(item => {
+      if(item.type.startsWith('image/')) processImgFile(item.getAsFile(), previewId);
+    });
+  });
+}
+
+function processImgFile(file, previewId) {
+  if(!file.type.startsWith('image/')) return;
+  if(pendingImages.length >= 3) { toast('Máximo 3 imágenes', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    compressImg(e.target.result, 400, 400, 0.75, b64 => {
+      pendingImages.push(b64);
+      renderImgPreviews(previewId);
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImg(src, mw, mh, q, cb) {
+  const img = new Image();
+  img.onload = () => {
+    let w=img.width, h=img.height;
+    if(w>mw||h>mh) { if(w/h>mw/mh){h=Math.round(h*mw/w);w=mw;}else{w=Math.round(w*mh/h);h=mh;} }
+    const c=document.createElement('canvas'); c.width=w; c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);
+    cb(c.toDataURL('image/jpeg', q));
+  };
+  img.src = src;
+}
+
+function renderImgPreviews(previewId) {
+  const el = document.getElementById(previewId);
+  el.innerHTML = pendingImages.map((b,i) => `
+    <div class="img-preview-item">
+      <img src="${b}">
+      <button class="remove-img" onclick="removeImg(${i},'${previewId}')">✕</button>
+    </div>`).join('');
+}
+
+function removeImg(i, previewId) {
+  pendingImages.splice(i,1);
+  renderImgPreviews(previewId);
+}
+
+setupImageZone('pImgZone','pImgInput','pImgPreviews');
+
+// ══════════════ INVENTARIO ══════════════
+async function renderInventario() {
+  const products = await loadProducts();
+  renderInvStats(products);
+  renderInvTable(products);
+  renderInvGrid(products);
+}
+
+function renderInvStats(products) {
+  const total = products.length;
+  const lowStock = products.filter(p => (p.stock||0) <= 3 && (p.stock||0) > 0).length;
+  const outStock = products.filter(p => (p.stock||0) === 0).length;
+  const totalStockValue = products.reduce((s,p) => s + (p.stock||0)*(p.compra||0), 0);
+  document.getElementById('invStats').innerHTML = `
+    <div class="stat-card"><span class="stat-icon">📦</span><div class="stat-label">Productos</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><span class="stat-icon">✅</span><div class="stat-label">Con stock</div><div class="stat-value green">${total-outStock}</div></div>
+    <div class="stat-card"><span class="stat-icon">⚠️</span><div class="stat-label">Stock bajo</div><div class="stat-value gold">${lowStock}</div></div>
+    <div class="stat-card"><span class="stat-icon">🚫</span><div class="stat-label">Sin stock</div><div class="stat-value red">${outStock}</div></div>
+    <div class="stat-card"><span class="stat-icon">💰</span><div class="stat-label">Valor en stock</div><div class="stat-value">${fmt(totalStockValue)}</div></div>
+  `;
+}
+
+function renderInvTable(products) {
+  const tbody = document.getElementById('invTableBody');
+  if(!products.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Sin productos. Agregá el primero.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = products.map(p => {
+    const stk = p.stock||0;
+    const sc = stk===0?'stock-out':stk<=3?'stock-low':'stock-ok';
+    const img = p.images&&p.images[0] ? `<img src="${p.images[0]}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">` : '—';
+    return `<tr>
+      <td>${p.name}</td>
+      <td><span class="stock-badge ${sc}">${stk}</span></td>
+      <td style="color:var(--text3);font-family:monospace">${fmt(p.compra)}</td>
+      <td>${fmt(p.minorista)}</td>
+      <td>${fmt(p.mayorista)}</td>
+      <td>${img}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showProductInfo('${p.id}')">Ver</button>
+        <button class="btn btn-ghost btn-sm" onclick="editProduct('${p.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Eliminar</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderInvGrid(products) {
+  const grid = document.getElementById('invGrid');
+  if(!products.length) { grid.innerHTML='<p style="color:var(--text3)">Sin productos.</p>'; return; }
+  grid.innerHTML = products.map(p => {
+    const img = p.images&&p.images[0] ? `<img src="${p.images[0]}">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;opacity:0.2">📦</div>';
+    return `<div class="product-card" onclick="showProductInfo('${p.id}')">
+      <div class="product-card-img">${img}</div>
+      <div class="product-card-body">
+        <div class="product-card-name">${p.name}</div>
+        <div class="product-card-price">Minorista: <strong>${fmt(p.minorista)}</strong></div>
+        <div class="product-card-price" style="margin-top:0.2rem">Stock: <strong style="color:${(p.stock||0)===0?'var(--red)':(p.stock||0)<=3?'var(--orange)':'var(--green)'}">${p.stock||0}</strong></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveProduct() {
+  const id = document.getElementById('editProductId').value;
+  const nombre = document.getElementById('pName').value.trim();
+  const compra = Math.round(parseFloat(document.getElementById('pCompra').value)||0);
+  const stock = parseInt(document.getElementById('pStock').value)||0;
+  const minorista = Math.round(parseFloat(document.getElementById('pMinorista').value)||0);
+  const mayorista = Math.round(parseFloat(document.getElementById('pMayorista').value)||0);
+  const descripcion = document.getElementById('pDesc').value.trim();
+  if(!nombre) { toast('El nombre es requerido','error'); return; }
+  if(!minorista||!mayorista) { toast('Los precios son requeridos','error'); return; }
+
+  const payload = {
+    nombre,
+    descripcion,
+    stock,
+    compra,
+    precio_minorista: minorista,
+    precio_mayorista: mayorista,
+    imagenes: pendingImages,
+  };
+
+  let res;
+  if (id) {
+    payload.id = parseInt(id, 10);
+    res = await apiFetch(PRODUCT_API, 'PUT', payload);
+  } else {
+    res = await apiFetch(PRODUCT_API, 'POST', payload);
+  }
+
+  if (!res || !res.ok) {
+    toast('Error al guardar el producto','error');
+    return;
+  }
+
+  window._products = null;
+  await renderInventario();
+  toast(id ? 'Producto actualizado' : 'Producto agregado');
+  closeModal('productModal');
+  resetProductModal();
+}
+
+function resetProductModal() {
+  document.getElementById('editProductId').value='';
+  document.getElementById('productModalTitle').textContent='Agregar Producto';
+  ['pName','pCompra','pMinorista','pMayorista','pDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pStock').value='0';
+  pendingImages=[];
+  document.getElementById('pImgPreviews').innerHTML='';
+}
+
+async function editProduct(id) {
+  const products = await loadProducts();
+  const p = products.find(x=>String(x.id) === String(id));
+  if(!p) return;
+  document.getElementById('editProductId').value = p.id;
+  document.getElementById('productModalTitle').textContent = 'Editar Producto';
+  document.getElementById('pName').value = p.name;
+  document.getElementById('pCompra').value = p.compra||'';
+  document.getElementById('pStock').value = p.stock||0;
+  document.getElementById('pMinorista').value = p.minorista||'';
+  document.getElementById('pMayorista').value = p.mayorista||'';
+  document.getElementById('pDesc').value = p.desc||'';
+  pendingImages = [...(p.images||[])];
+  renderImgPreviews('pImgPreviews');
+  openModal('productModal');
+}
+
+async function deleteProduct(id) {
+  if(!confirm('¿Eliminar este producto?')) return;
+  const res = await apiFetch(`${PRODUCT_API}?id=${encodeURIComponent(id)}`, 'DELETE');
+  if (!res || !res.ok) {
+    toast('Error al eliminar el producto','error');
+    return;
+  }
+  window._products = null;
+  await renderInventario();
+  toast('Producto eliminado','info');
+}
+
+async function showProductInfo(id) {
+  const products = await loadProducts();
+  const p = products.find(x=>String(x.id) === String(id));
+  if(!p) return;
+  const compra=p.compra||0, min=p.minorista||0, may=p.mayorista||0;
+  const pctMin=compra>0?(((min-compra)/compra)*100).toFixed(1):'—';
+  const pctMay=compra>0?(((may-compra)/compra)*100).toFixed(1):'—';
+  const imgs = (p.images||[]).slice(0,3).map(b=>`<img src="${b}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`).join('');
+  document.getElementById('productInfoBody').innerHTML = `
+    <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">${imgs||'<span style="color:var(--text3);font-size:0.85rem">Sin imágenes</span>'}</div>
+    <h3 style="font-family:var(--font-d);margin-bottom:0.8rem">${p.name}</h3>
+    ${p.desc?`<p style="color:var(--text2);font-size:0.88rem;margin-bottom:1rem">${p.desc}</p>`:''}
+    <div class="totals-box">
+      <div class="totals-row"><span>Stock actual</span><span style="color:${(p.stock||0)===0?'var(--red)':'var(--green)'}">${p.stock||0} unidades</span></div>
+      <div class="totals-row"><span>Precio compra 🔒</span><span style="color:var(--text3)">${fmt(compra)}</span></div>
+      <div class="totals-row"><span>Minorista</span><span>${fmt(min)} <small style="color:var(--green);font-size:0.75rem">(+${pctMin}%)</small></span></div>
+      <div class="totals-row"><span>Mayorista</span><span>${fmt(may)} <small style="color:var(--green);font-size:0.75rem">(+${pctMay}%)</small></span></div>
+    </div>
+    <div class="mt-2 flex gap-1">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('productInfoModal');editProduct('${p.id}')">Editar</button>
+      <button class="btn btn-danger btn-sm" onclick="closeModal('productInfoModal');deleteProduct('${p.id}')">Eliminar</button>
+    </div>
+  `;
+  openModal('productInfoModal');
+}
+
+// ══════════════ COMBOS ══════════════
+function fillComboCheckList() {
+  const products = DB.get('products');
+  const el = document.getElementById('comboCheckList');
+  el.innerHTML = products.length
+    ? products.map(p=>`<label><input type="checkbox" class="comboChk" value="${p.id}"> ${p.name}</label>`).join('')
+    : '<span style="color:var(--text3);font-size:0.85rem">Sin productos aún.</span>';
+}
+
+function saveCombo() {
+  const name = document.getElementById('cName').value.trim();
+  const min = Math.round(parseFloat(document.getElementById('cMinorista').value)||0);
+  const may = Math.round(parseFloat(document.getElementById('cMayorista').value)||0);
+  const checked = [...document.querySelectorAll('.comboChk:checked')].map(c=>c.value);
+  if(!name||!min||!may) { toast('Completá todos los campos del combo','error'); return; }
+  if(checked.length<2) { toast('Seleccioná al menos 2 productos','error'); return; }
+  const combos = DB.get('combos');
+  combos.push({id:uid(), name, minorista:min, mayorista:may, productIds:checked});
+  DB.set('combos', combos);
+  document.getElementById('cName').value='';
+  document.getElementById('cMinorista').value='';
+  document.getElementById('cMayorista').value='';
+  document.querySelectorAll('.comboChk').forEach(c=>c.checked=false);
+  toast('Combo creado');
+  renderComboInline();
+  renderCombosTable();
+}
+
+function deleteCombo(id) {
+  if(!confirm('¿Eliminar combo?')) return;
+  DB.set('combos', DB.get('combos').filter(c=>c.id!==id));
+  toast('Combo eliminado','info');
+  renderComboInline();
+  renderCombosTable();
+}
+
+function renderComboInline() {
+  const combos = DB.get('combos');
+  const products = DB.get('products');
+  const tbody = document.getElementById('comboInlineBody');
+  tbody.innerHTML = combos.length
+    ? combos.map(c=>{
+        const names = c.productIds.map(id=>products.find(p=>p.id===id)?.name||'?').join(', ');
+        return `<tr><td>${c.name}</td><td style="font-size:0.8rem;color:var(--text3)">${names}</td><td>${fmt(c.minorista)}</td><td>${fmt(c.mayorista)}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteCombo('${c.id}')">✕</button></td></tr>`;
+      }).join('')
+    : '<tr class="empty-row"><td colspan="5">Sin combos.</td></tr>';
+}
+
+function renderCombosTable() {
+  const combos = DB.get('combos');
+  const products = DB.get('products');
+  const tbody = document.getElementById('combosTableBody');
+  tbody.innerHTML = combos.length
+    ? combos.map(c=>{
+        const names = c.productIds.map(id=>products.find(p=>p.id===id)?.name||'?').join(', ');
+        return `<tr><td>${c.name}</td><td style="font-size:0.82rem;color:var(--text3)">${names}</td><td>${fmt(c.minorista)}</td><td>${fmt(c.mayorista)}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteCombo('${c.id}')">Eliminar</button></td></tr>`;
+      }).join('')
+    : '<tr class="empty-row"><td colspan="5">Sin combos definidos.</td></tr>';
+}
+
+// ══════════════ VENTAS ══════════════
+let saleCart = [];
+
+function refreshSaleProductList() {
+  const type = document.getElementById('saleClientType').value;
+  const products = DB.get('products');
+  const combos = DB.get('combos');
+  const sel = document.getElementById('saleProductSel');
+  sel.innerHTML = '<option value="">— Seleccioná —</option>';
+  if(products.length) {
+    const g = document.createElement('optgroup'); g.label='📦 Productos';
+    products.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=`prod_${p.id}`;
+      o.textContent=`${p.name} — ${fmt(type==='mayorista'?p.mayorista:p.minorista)}`;
+      o.dataset.price=type==='mayorista'?p.mayorista:p.minorista;
+      g.appendChild(o);
+    });
+    sel.appendChild(g);
+  }
+  if(combos.length) {
+    const g = document.createElement('optgroup'); g.label='⭐ Combos';
+    combos.forEach(c=>{
+      const o=document.createElement('option');
+      o.value=`combo_${c.id}`;
+      o.textContent=`${c.name} — ${fmt(type==='mayorista'?c.mayorista:c.minorista)}`;
+      o.dataset.price=type==='mayorista'?c.mayorista:c.minorista;
+      g.appendChild(o);
+    });
+    sel.appendChild(g);
+  }
+}
+
+function onSaleProductChange() {
+  const sel = document.getElementById('saleProductSel');
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('salePriceInput').value = opt?.dataset?.price ? Math.round(parseFloat(opt.dataset.price)) : '';
+}
+
+function addToSaleCart() {
+  const sel = document.getElementById('saleProductSel');
+  const val = sel.value;
+  if(!val) { toast('Seleccioná un producto','error'); return; }
+  const price = Math.round(parseFloat(document.getElementById('salePriceInput').value)||0);
+  const qty = parseInt(document.getElementById('saleQtyInput').value)||1;
+  const opt = sel.options[sel.selectedIndex];
+  const [type, id] = val.split('_');
+  const name = opt.textContent.split('—')[0].trim();
+
+  if(type==='prod') {
+    const products = DB.get('products');
+    const prod = products.find(p=>p.id===id);
+    if(prod && (prod.stock||0) < qty) { toast(`Stock insuficiente (disponible: ${prod.stock||0})`,'error'); return; }
+  }
+
+  const existing = saleCart.find(i=>i.val===val);
+  if(existing) { existing.qty+=qty; existing.subtotal=existing.price*existing.qty; }
+  else saleCart.push({val,name,price,qty,type,id,subtotal:price*qty});
+
+  renderSaleCart();
+  sel.value=''; document.getElementById('salePriceInput').value=''; document.getElementById('saleQtyInput').value='1';
+}
+
+function removeSaleCart(i) { saleCart.splice(i,1); renderSaleCart(); }
+
+function renderSaleCart() {
+  const tbody = document.getElementById('saleCartBody');
+  const count = document.getElementById('cartCount');
+  if(!saleCart.length) {
+    tbody.innerHTML='<tr class="empty-row"><td colspan="5">Carrito vacío</td></tr>';
+    count.textContent='0 items';
+    document.getElementById('saleSub').textContent='$0';
+    document.getElementById('saleTotal').textContent='$0';
+    return;
+  }
+  tbody.innerHTML = saleCart.map((item,i)=>`<tr>
+    <td>${item.type==='combo'?'⭐ ':''} ${item.name}</td>
+    <td>${fmt(item.price)}</td>
+    <td><input class="qty-input" type="number" value="${item.qty}" min="1" onchange="updateSaleQty(${i},this.value)"></td>
+    <td>${fmt(item.subtotal)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="removeSaleCart(${i})">✕</button></td>
+  </tr>`).join('');
+  const totalQty = saleCart.reduce((s,i)=>s+i.qty,0);
+  count.textContent=`${totalQty} item${totalQty!==1?'s':''}`;
+  recalcSaleTotal();
+}
+
+function updateSaleQty(i, val) {
+  saleCart[i].qty = Math.max(1,parseInt(val)||1);
+  saleCart[i].subtotal = saleCart[i].price * saleCart[i].qty;
+  renderSaleCart();
+}
+
+function toggleSaleShipping() {
+  const show = document.getElementById('saleHasShipping').value==='si';
+  document.getElementById('saleShippingField').style.display = show?'':'none';
+  recalcSaleTotal();
+}
+
+function recalcSaleTotal() {
+  const sub = saleCart.reduce((s,i)=>s+i.subtotal,0);
+  const ship = document.getElementById('saleHasShipping').value==='si' ? Math.round(parseFloat(document.getElementById('saleShippingCost').value)||0) : 0;
+  document.getElementById('saleSub').textContent = fmt(sub);
+  document.getElementById('saleShipShow').textContent = fmt(ship);
+  document.getElementById('saleTotal').textContent = fmt(sub+ship);
+}
+
+async function confirmSale() {
+  if(!saleCart.length) { toast('El carrito está vacío','error'); return; }
+  const client = document.getElementById('saleClientName').value.trim();
+  const hasShip = document.getElementById('saleHasShipping').value==='si';
+  const shipCost = hasShip ? Math.round(parseFloat(document.getElementById('saleShippingCost').value)||0) : 0;
+  const notes = document.getElementById('saleNotes').value.trim();
+  const clientType = document.getElementById('saleClientType').value;
+  const sub = saleCart.reduce((s,i)=>s+i.subtotal,0);
+  const total = sub + shipCost;
+
+  const products = DB.get('products');
+  const changedProducts = [];
+  saleCart.forEach(item=>{
+    if(item.type==='prod') {
+      const idx=products.findIndex(p=>String(p.id)===String(item.id));
+      if(idx>=0) {
+        products[idx].stock = Math.max(0,(products[idx].stock||0)-item.qty);
+        changedProducts.push(products[idx]);
+        logStock('Venta', products[idx].name, -item.qty);
+      }
+    }
+  });
+  if(changedProducts.length) await updateProductsInDB(changedProducts);
+
+  const sales = DB.get('sales');
+  const sale = {
+    id: uid(), date: new Date().toISOString(), client: client||'Sin nombre',
+    clientType, items: [...saleCart], sub, shipCost, total, notes, hasShip
+  };
+  sales.push(sale);
+  DB.set('sales',sales);
+
+  logMoney('venta', `Venta${client?' a '+client:''} (${saleCart.map(i=>i.name).join(', ')})`, total);
+
+  toast(`Venta registrada: ${fmt(total)}`);
+  saleCart=[];
+  renderSaleCart();
+  ['saleClientName','saleNotes','saleShippingCost'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('saleHasShipping').value='no';
+  document.getElementById('saleShippingField').style.display='none';
+  renderVentasStats();
+  await renderInventario();
+  renderPendingShipmentsBanner();
+}
+
+// ══════════════ STATS VENTAS (sin balance neto) ══════════════
+function renderVentasStats() {
+  const sales = DB.get('sales');
+  const money = DB.get('money');
+  const totalVentas = sales.reduce((s,v)=>s+v.total,0);
+  const totalGastos = money.filter(m=>m.type==='gasto').reduce((s,m)=>s+m.amount,0);
+  const totalInv = money.filter(m=>m.type==='inversion').reduce((s,m)=>s+m.amount,0);
+  document.getElementById('ventasStats').innerHTML = `
+    <div class="stat-card"><span class="stat-icon">⚡</span><div class="stat-label">Total ventas</div><div class="stat-value green">${fmt(totalVentas)}</div><div class="stat-sub">${sales.length} venta${sales.length!==1?'s':''}</div></div>
+    <div class="stat-card"><span class="stat-icon">📥</span><div class="stat-label">Inversiones</div><div class="stat-value blue">${fmt(totalInv)}</div></div>
+    <div class="stat-card"><span class="stat-icon">💸</span><div class="stat-label">Gastos</div><div class="stat-value red">${fmt(totalGastos)}</div></div>
+  `;
+}
+
+// ══════════════ BANNER ENVÍOS PENDIENTES EN VENTAS ══════════════
+function renderPendingShipmentsBanner() {
+  const banner = document.getElementById('pendingShipmentsBanner');
+  if(!banner) return;
+  const shipments = DB.get('shipments');
+  const pending = shipments.filter(s => s.status === 'pendiente' || s.status === 'en_camino');
+  if(!pending.length) { banner.style.display='none'; return; }
+  banner.style.display='block';
+  const links = pending.slice(0,4).map(s =>
+    `<span class="banner-link" onclick="goToEnvios()">${s.client} (${s.status==='pendiente'?'pendiente':'en camino'})</span>`
+  ).join('');
+  const extra = pending.length > 4 ? `<span class="banner-link" onclick="goToEnvios()">+${pending.length-4} más</span>` : '';
+  banner.innerHTML = `
+    <div class="pending-shipments-banner">
+      <div class="banner-text">🚚 Hay <strong>${pending.length}</strong> envío${pending.length!==1?'s':''} pendiente${pending.length!==1?'s':''} o en camino</div>
+      <div class="banner-links">${links}${extra}</div>
+    </div>`;
+}
+
+function goToEnvios() {
+  document.querySelector('[data-section="envios"]').click();
+}
+
+// ══════════════ GASTOS / INVERSIONES ══════════════
+function saveGasto() {
+  const desc=document.getElementById('gastoDesc').value.trim();
+  const monto=Math.round(parseFloat(document.getElementById('gastoMonto').value)||0);
+  if(!desc||!monto) { toast('Completá todos los campos','error'); return; }
+  logMoney('gasto', desc, monto);
+  toast('Gasto registrado');
+  closeModal('gastoModal');
+  document.getElementById('gastoDesc').value='';
+  document.getElementById('gastoMonto').value='';
+  renderVentasStats();
+}
+
+function fillInversionProductSel() {
+  const products = DB.get('products');
+  const sel=document.getElementById('invProductSel');
+  sel.innerHTML='<option value="">No actualizar stock</option>'+products.map(p=>`<option value="${p.id}">${p.name} (stock: ${p.stock||0})</option>`).join('');
+  sel.onchange=()=>{ document.getElementById('invStockField').style.display=sel.value?'':'none'; };
+}
+
+async function saveInversion() {
+  const desc=document.getElementById('invDesc').value.trim();
+  const monto=Math.round(parseFloat(document.getElementById('invMonto').value)||0);
+  if(!desc||!monto) { toast('Completá todos los campos','error'); return; }
+  const prodId=document.getElementById('invProductSel').value;
+  const qty=parseInt(document.getElementById('invStockQty').value)||1;
+  if(prodId) {
+    const products=DB.get('products');
+    const idx=products.findIndex(p=>String(p.id)===String(prodId));
+    if(idx>=0) {
+      products[idx].stock=(products[idx].stock||0)+qty;
+      await updateProductsInDB([products[idx]]);
+      logStock('Reposición',products[idx].name,qty);
+    }
+  }
+  logMoney('inversion',desc,monto);
+  toast('Inversión registrada');
+  closeModal('inversionModal');
+  document.getElementById('invDesc').value='';
+  document.getElementById('invMonto').value='';
+  document.getElementById('invProductSel').value='';
+  document.getElementById('invStockField').style.display='none';
+  renderVentasStats();
+  renderInventario();
+}
+
+function logMoney(type, desc, amount) {
+  const money=DB.get('money');
+  money.push({id:uid(),type,desc,amount:Math.round(amount),date:new Date().toISOString()});
+  DB.set('money',money);
+}
+
+function logStock(action, productName, qty) {
+  const stockLog=DB.get('stockLog');
+  stockLog.push({id:uid(),action,productName,qty,date:new Date().toISOString()});
+  DB.set('stockLog',stockLog);
+}
+
+// ══════════════ ENVÍOS ══════════════
+let shipCart = [];
+
+// Rellena el select de venta asociada en el modal de envío
+function fillLinkedSaleSelect() {
+  const sales = DB.get('sales');
+  const sel = document.getElementById('shLinkedSale');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Sin venta asociada</option>';
+  [...sales].reverse().forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = `${fmtDateShort(s.date)} — ${s.client} — ${fmt(s.total)}`;
+    sel.appendChild(o);
+  });
+}
+
+function refreshShipProductList() {
+  const type = document.getElementById('shClientType').value;
+  const products = DB.get('products');
+  const combos = DB.get('combos');
+  const sel = document.getElementById('shProductSel');
+  sel.innerHTML = '<option value="">— Seleccioná —</option>';
+  if(products.length) {
+    const g=document.createElement('optgroup'); g.label='📦 Productos';
+    products.forEach(p=>{ const o=document.createElement('option'); o.value=`prod_${p.id}`; o.textContent=`${p.name} — ${fmt(type==='mayorista'?p.mayorista:p.minorista)}`; o.dataset.price=type==='mayorista'?p.mayorista:p.minorista; g.appendChild(o); });
+    sel.appendChild(g);
+  }
+  if(combos.length) {
+    const g=document.createElement('optgroup'); g.label='⭐ Combos';
+    combos.forEach(c=>{ const o=document.createElement('option'); o.value=`combo_${c.id}`; o.textContent=`${c.name} — ${fmt(type==='mayorista'?c.mayorista:c.minorista)}`; o.dataset.price=type==='mayorista'?c.mayorista:c.minorista; g.appendChild(o); });
+    sel.appendChild(g);
+  }
+}
+
+function onShipProductChange() {}
+
+function addToShipCart() {
+  const sel=document.getElementById('shProductSel');
+  const val=sel.value;
+  if(!val) { toast('Seleccioná un producto','error'); return; }
+  const opt=sel.options[sel.selectedIndex];
+  const price=Math.round(parseFloat(opt?.dataset?.price)||0);
+  const qty=parseInt(document.getElementById('shQty').value)||1;
+  const [type,id]=val.split('_');
+  const name=opt.textContent.split('—')[0].trim();
+  const existing=shipCart.find(i=>i.val===val);
+  if(existing){existing.qty+=qty;existing.subtotal=existing.price*existing.qty;}
+  else shipCart.push({val,name,price,qty,type,id,subtotal:price*qty});
+  renderShipCart();
+  sel.value=''; document.getElementById('shQty').value='1';
+}
+
+function removeShipCart(i) { shipCart.splice(i,1); renderShipCart(); }
+
+function renderShipCart() {
+  const tbody=document.getElementById('shipCartBody');
+  if(!shipCart.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">Sin productos</td></tr>';recalcShipTotal();return;}
+  tbody.innerHTML=shipCart.map((item,i)=>`<tr>
+    <td>${item.name}</td><td>${fmt(item.price)}</td>
+    <td><input class="qty-input" type="number" value="${item.qty}" min="1" onchange="updateShipQty(${i},this.value)"></td>
+    <td>${fmt(item.subtotal)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="removeShipCart(${i})">✕</button></td>
+  </tr>`).join('');
+  recalcShipTotal();
+}
+
+function updateShipQty(i,val){shipCart[i].qty=Math.max(1,parseInt(val)||1);shipCart[i].subtotal=shipCart[i].price*shipCart[i].qty;renderShipCart();}
+
+function recalcShipTotal(){
+  const sub=shipCart.reduce((s,i)=>s+i.subtotal,0);
+  const ship=Math.round(parseFloat(document.getElementById('shShipping').value)||0);
+  document.getElementById('shipSubShow').textContent=fmt(sub);
+  document.getElementById('shipShipShow').textContent=fmt(ship);
+  document.getElementById('shipTotalShow').textContent=fmt(sub+ship);
+}
+
+async function saveShipment() {
+  const editId=document.getElementById('editShipId').value;
+  const client=document.getElementById('shClient').value.trim();
+  const phone=document.getElementById('shPhone').value.trim();
+  const address=document.getElementById('shAddress').value.trim();
+  const clientType=document.getElementById('shClientType').value;
+  const shipCost=Math.round(parseFloat(document.getElementById('shShipping').value)||0);
+  const status=document.getElementById('shStatus').value;
+  const notes=document.getElementById('shNotes').value.trim();
+  const linkedSaleId=document.getElementById('shLinkedSale')?.value||'';
+  if(!client||!phone||!address){toast('Completá cliente, teléfono y dirección','error');return;}
+  if(!shipCart.length){toast('Agregá al menos un producto','error');return;}
+  const sub=shipCart.reduce((s,i)=>s+i.subtotal,0);
+  const total=sub+shipCost;
+
+  const shipments=DB.get('shipments');
+  if(editId){
+    const idx=shipments.findIndex(s=>s.id===editId);
+    if(idx>=0) shipments[idx]={...shipments[idx],client,phone,address,clientType,shipCost,status,notes,linkedSaleId,items:[...shipCart],sub,total,updatedAt:new Date().toISOString()};
+  } else {
+    const newShip={id:uid(),date:new Date().toISOString(),client,phone,address,clientType,shipCost,status,notes,linkedSaleId,items:[...shipCart],sub,total};
+    shipments.push(newShip);
+    const products=DB.get('products');
+    const updatedProducts=[];
+    shipCart.forEach(item=>{ if(item.type==='prod'){const idx=products.findIndex(p=>String(p.id)===String(item.id));if(idx>=0){products[idx].stock=Math.max(0,(products[idx].stock||0)-item.qty);updatedProducts.push(products[idx]);logStock('Envío',products[idx].name,-item.qty);}} });
+    if(updatedProducts.length) await updateProductsInDB(updatedProducts);
+    logMoney('venta',`Envío a ${client} (${shipCart.map(i=>i.name).join(', ')})`,total);
+  }
+  DB.set('shipments',shipments);
+  toast(editId?'Envío actualizado':'Envío creado');
+  closeModal('shipModal');
+  resetShipModal();
+  renderEnvios();
+  renderShipStats();
+  renderShipHistory();
+  renderInventario();
+}
+
+function resetShipModal(){
+  document.getElementById('editShipId').value='';
+  document.getElementById('shipModalTitle').textContent='Nuevo Envío';
+  ['shClient','shPhone','shAddress','shShipping','shNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('shClientType').value='minorista';
+  document.getElementById('shStatus').value='pendiente';
+  if(document.getElementById('shLinkedSale')) document.getElementById('shLinkedSale').value='';
+  shipCart=[];
+  renderShipCart();
+}
+
+// Columna de venta asociada
+function linkedSaleBadge(linkedSaleId) {
+  if(!linkedSaleId) return `<span class="no-sale-badge">Sin venta</span>`;
+  const sales = DB.get('sales');
+  const sale = sales.find(s=>s.id===linkedSaleId);
+  if(!sale) return `<span class="no-sale-badge">Sin venta</span>`;
+  return `<span class="sale-link-badge" title="Venta: ${sale.client} — ${fmt(sale.total)}">✓ Venta vinc.</span>`;
+}
+
+function renderEnvios() {
+  const shipments=DB.get('shipments');
+  const tbody=document.getElementById('shipTableBody');
+  if(!shipments.length){tbody.innerHTML='<tr class="empty-row"><td colspan="11">Sin envíos registrados.</td></tr>';return;}
+  // Solo mostrar activos (no entregados ni cancelados)
+  const activos = [...shipments].reverse().filter(s => s.status !== 'entregado' && s.status !== 'cancelado');
+  if(!activos.length){tbody.innerHTML='<tr class="empty-row"><td colspan="11">No hay envíos activos. Revisá el historial completo.</td></tr>';return;}
+  tbody.innerHTML=activos.map(s=>{
+    const typeBadge=s.clientType==='mayorista'?'badge-gold':'badge-gray';
+    return `<tr>
+      <td class="font-mono" style="font-size:0.75rem;color:var(--text3)">#${s.id.slice(-6)}</td>
+      <td>${s.client}</td>
+      <td>${s.phone}</td>
+      <td style="font-size:0.83rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.address}</td>
+      <td style="font-size:0.8rem;color:var(--text3)">${s.items.map(i=>i.name).join(', ')}</td>
+      <td><span class="badge ${typeBadge}">${s.clientType}</span></td>
+      <td>${fmt(s.shipCost)}</td>
+      <td>${fmt(s.total)}</td>
+      <td>${linkedSaleBadge(s.linkedSaleId)}</td>
+      <td>
+        <select class="status-select" onchange="updateShipStatus('${s.id}',this.value)">
+          <option value="pendiente" ${s.status==='pendiente'?'selected':''}>Pendiente</option>
+          <option value="en_camino" ${s.status==='en_camino'?'selected':''}>En camino</option>
+          <option value="entregado" ${s.status==='entregado'?'selected':''}>Entregado</option>
+          <option value="cancelado" ${s.status==='cancelado'?'selected':''}>Cancelado</option>
+        </select>
+      </td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-sm" onclick="viewShipDetail('${s.id}')">Ver</button>
+        <button class="btn btn-ghost btn-sm" onclick="editShipment('${s.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteShipment('${s.id}')">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderShipHistory() {
+  const shipments = DB.get('shipments');
+  const tbody = document.getElementById('shipHistoryBody');
+  if(!shipments.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">Sin historial de envíos.</td></tr>';return;}
+  const statusBadgeMap = {pendiente:'badge-orange',en_camino:'badge-blue',entregado:'badge-green',cancelado:'badge-red'};
+  const statusLabel = {pendiente:'Pendiente',en_camino:'En camino',entregado:'Entregado',cancelado:'Cancelado'};
+  tbody.innerHTML=[...shipments].reverse().map(s=>`<tr>
+    <td class="font-mono" style="font-size:0.75rem;color:var(--text3)">#${s.id.slice(-6)}</td>
+    <td style="font-size:0.8rem;color:var(--text3)">${fmtDate(s.date)}</td>
+    <td>${s.client}</td>
+    <td style="font-size:0.82rem;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.address}</td>
+    <td style="color:var(--green)">${fmt(s.total)}</td>
+    <td>${linkedSaleBadge(s.linkedSaleId)}</td>
+    <td><span class="badge ${statusBadgeMap[s.status]||'badge-gray'}">${statusLabel[s.status]||s.status}</span></td>
+  </tr>`).join('');
+}
+
+// ══════════════ STATS ENVÍOS (sin total facturado) ══════════════
+function renderShipStats(){
+  const s=DB.get('shipments');
+  const pend=s.filter(x=>x.status==='pendiente').length;
+  const enc=s.filter(x=>x.status==='en_camino').length;
+  const ent=s.filter(x=>x.status==='entregado').length;
+  document.getElementById('shipStats').innerHTML=`
+    <div class="stat-card"><span class="stat-icon">📋</span><div class="stat-label">Total envíos</div><div class="stat-value">${s.length}</div></div>
+    <div class="stat-card"><span class="stat-icon">⏳</span><div class="stat-label">Pendientes</div><div class="stat-value gold">${pend}</div></div>
+    <div class="stat-card"><span class="stat-icon">🚚</span><div class="stat-label">En camino</div><div class="stat-value blue">${enc}</div></div>
+    <div class="stat-card"><span class="stat-icon">✅</span><div class="stat-label">Entregados</div><div class="stat-value green">${ent}</div></div>
+  `;
+}
+
+function updateShipStatus(id,status){
+  const s=DB.get('shipments');
+  const idx=s.findIndex(x=>x.id===id);
+  if(idx>=0){s[idx].status=status;DB.set('shipments',s);toast('Estado actualizado');}
+  renderEnvios();
+  renderShipStats();
+  renderShipHistory();
+}
+
+function deleteShipment(id){
+  if(!confirm('¿Eliminar envío?'))return;
+  DB.set('shipments',DB.get('shipments').filter(s=>s.id!==id));
+  toast('Envío eliminado','info');
+  renderEnvios();
+  renderShipStats();
+  renderShipHistory();
+}
+
+function viewShipDetail(id){
+  const s=DB.get('shipments').find(x=>x.id===id);
+  if(!s)return;
+  const statusLabel={pendiente:'Pendiente',en_camino:'En camino',entregado:'Entregado',cancelado:'Cancelado'}[s.status]||s.status;
+  document.getElementById('shipDetailBody').innerHTML=`
+    <div class="totals-box" style="margin:0 0 1rem">
+      <div class="totals-row"><span>ID</span><span class="font-mono">#${s.id.slice(-6)}</span></div>
+      <div class="totals-row"><span>Fecha</span><span>${fmtDate(s.date)}</span></div>
+      <div class="totals-row"><span>Cliente</span><span>${s.client}</span></div>
+      <div class="totals-row"><span>Teléfono</span><span>${s.phone}</span></div>
+      <div class="totals-row"><span>Dirección</span><span>${s.address}</span></div>
+      <div class="totals-row"><span>Tipo</span><span>${s.clientType}</span></div>
+      <div class="totals-row"><span>Estado</span><span>${statusLabel}</span></div>
+      <div class="totals-row"><span>Venta asociada</span><span>${linkedSaleBadge(s.linkedSaleId)}</span></div>
+      ${s.notes?`<div class="totals-row"><span>Notas</span><span>${s.notes}</span></div>`:''}
+    </div>
+    <p style="font-size:0.75rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.6rem">Productos</p>
+    <div class="table-wrap" style="margin-bottom:1rem">
+      <table><thead><tr><th>Producto</th><th>P.Unit.</th><th>Cant.</th><th>Subtotal</th></tr></thead>
+      <tbody>${s.items.map(i=>`<tr><td>${i.name}</td><td>${fmt(i.price)}</td><td>${i.qty}</td><td>${fmt(i.subtotal)}</td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="totals-box">
+      <div class="totals-row"><span>Subtotal</span><span>${fmt(s.sub)}</span></div>
+      <div class="totals-row"><span>Envío</span><span>${fmt(s.shipCost)}</span></div>
+      <div class="totals-row"><span>TOTAL</span><span>${fmt(s.total)}</span></div>
+    </div>
+  `;
+  openModal('shipDetailModal');
+}
+
+function editShipment(id){
+  const s=DB.get('shipments').find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('editShipId').value=s.id;
+  document.getElementById('shipModalTitle').textContent='Editar Envío';
+  document.getElementById('shClient').value=s.client;
+  document.getElementById('shPhone').value=s.phone;
+  document.getElementById('shAddress').value=s.address;
+  document.getElementById('shClientType').value=s.clientType;
+  document.getElementById('shShipping').value=s.shipCost;
+  document.getElementById('shStatus').value=s.status;
+  document.getElementById('shNotes').value=s.notes||'';
+  fillLinkedSaleSelect();
+  if(document.getElementById('shLinkedSale')) document.getElementById('shLinkedSale').value=s.linkedSaleId||'';
+  shipCart=[...s.items];
+  refreshShipProductList();
+  renderShipCart();
+  openModal('shipModal');
+}
+
+// ══════════════ EXPORTAR ENVÍOS DEL DÍA (TXT) ══════════════
+function exportShipmentsToday() {
+  const shipments = DB.get('shipments');
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('es-AR');
+  const todayShipments = shipments.filter(s => {
+    const d = new Date(s.date);
+    return d.toLocaleDateString('es-AR') === todayStr;
+  });
+
+  if(!todayShipments.length) {
+    toast('No hay envíos registrados hoy','info');
+    return;
+  }
+
+  const statusLabel = {pendiente:'Pendiente',en_camino:'En camino',entregado:'Entregado',cancelado:'Cancelado'};
+  let txt = '═══════════════════════════════════════════\n';
+  txt += `   ENVÍOS DEL DÍA — ${todayStr}\n`;
+  txt += '═══════════════════════════════════════════\n\n';
+
+  todayShipments.forEach((s, i) => {
+    txt += `ENVÍO #${i+1} — ID: #${s.id.slice(-6)}\n`;
+    txt += `──────────────────────────────────────────\n`;
+    txt += `Cliente:    ${s.client}\n`;
+    txt += `Teléfono:   ${s.phone}\n`;
+    txt += `Dirección:  ${s.address}\n`;
+    txt += `Productos:  ${s.items.map(it=>`${it.name} x${it.qty}`).join(', ')}\n`;
+    txt += `Subtotal:   ${fmt(s.sub)}\n`;
+    if(s.shipCost) txt += `Costo envío: ${fmt(s.shipCost)}\n`;
+    txt += `TOTAL:      ${fmt(s.total)}\n`;
+    txt += `Estado:     ${statusLabel[s.status]||s.status}\n`;
+    if(s.notes) txt += `Notas:      ${s.notes}\n`;
+    txt += '\n';
+  });
+
+  txt += '═══════════════════════════════════════════\n';
+  txt += `Total envíos: ${todayShipments.length}\n`;
+
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `envios-${today.toISOString().slice(0,10)}.txt`;
+  a.click();
+  toast(`Exportados ${todayShipments.length} envío${todayShipments.length!==1?'s':''} del día`);
+}
+
+// ══════════════ REPORTES ══════════════
+function renderReports() {
+  const sales=DB.get('sales');
+  const money=DB.get('money');
+  const shipments=DB.get('shipments');
+
+  const totalVentas=sales.reduce((s,v)=>s+v.total,0);
+  const totalEnvios=shipments.reduce((s,x)=>s+x.total,0);
+  const gastos=money.filter(m=>m.type==='gasto').reduce((s,m)=>s+m.amount,0);
+  const inversiones=money.filter(m=>m.type==='inversion').reduce((s,m)=>s+m.amount,0);
+  const products=DB.get('products');
+  const stockVal=products.reduce((s,p)=>s+(p.compra||0)*(p.stock||0),0);
+  const ventasConEnvio = sales.filter(s=>s.hasShip).length;
+
+  document.getElementById('reportStats').innerHTML=`
+    <div class="stat-card"><span class="stat-icon">💰</span><div class="stat-label">Ingresos totales</div><div class="stat-value green">${fmt(totalVentas+totalEnvios)}</div><div class="stat-sub">${sales.length} ventas · ${shipments.length} envíos</div></div>
+    <div class="stat-card"><span class="stat-icon">📉</span><div class="stat-label">Gastos</div><div class="stat-value red">${fmt(gastos)}</div></div>
+    <div class="stat-card"><span class="stat-icon">📥</span><div class="stat-label">Inversiones</div><div class="stat-value blue">${fmt(inversiones)}</div></div>
+    <div class="stat-card"><span class="stat-icon">📦</span><div class="stat-label">Valor en stock</div><div class="stat-value gold">${fmt(stockVal)}</div></div>
+    <div class="stat-card"><span class="stat-icon">🚚</span><div class="stat-label">Ventas con envío</div><div class="stat-value">${ventasConEnvio}</div><div class="stat-sub">de ${sales.length} ventas</div></div>
+  `;
+
+  // Top productos
+  const productSales = {};
+  [...sales,...shipments].forEach(v=>{
+    (v.items||[]).forEach(item=>{
+      if(!productSales[item.name]) productSales[item.name]=0;
+      productSales[item.name]+=item.qty||1;
+    });
+  });
+  const sorted=Object.entries(productSales).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const maxVal=sorted[0]?.[1]||1;
+  document.getElementById('topProductsChart').innerHTML=sorted.length
+    ? sorted.map(([name,qty])=>`
+        <div class="bar-row">
+          <div class="bar-label" title="${name}">${name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(qty/maxVal*100).toFixed(1)}%"></div></div>
+          <div class="bar-val">${qty} ud.</div>
+        </div>`).join('')
+    : '<p style="color:var(--text3);font-size:0.85rem">Sin datos aún.</p>';
+
+  // Ventas recientes
+  const recentSales=[...sales,...shipments].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+  document.getElementById('recentSalesBody').innerHTML=recentSales.length
+    ? recentSales.map(v=>`<tr>
+        <td style="font-size:0.8rem;color:var(--text3)">${fmtDate(v.date)}</td>
+        <td>${v.client||v.nombre||'—'}</td>
+        <td style="color:var(--green)">${fmt(v.total)}</td>
+      </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="3">Sin ventas aún.</td></tr>';
+
+  // Movimientos
+  const allMoney=[...money].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,20);
+  document.getElementById('movimientosBody').innerHTML=allMoney.length
+    ? allMoney.map(m=>`<tr>
+        <td style="font-size:0.8rem;color:var(--text3)">${fmtDate(m.date)}</td>
+        <td><span class="badge ${m.type==='venta'?'badge-green':m.type==='gasto'?'badge-red':'badge-blue'}">${m.type}</span></td>
+        <td>${m.desc}</td>
+        <td style="color:${m.type==='gasto'?'var(--red)':'var(--green)'}">${m.type==='gasto'?'-':'+'} ${fmt(m.amount)}</td>
+      </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="4">Sin movimientos.</td></tr>';
+}
+
+function downloadTxt(){
+  const sales=DB.get('sales');
+  const shipments=DB.get('shipments');
+  const money=DB.get('money');
+  const now=new Date();
+  const totalV=sales.reduce((s,x)=>s+x.total,0);
+  const totalE=shipments.reduce((s,x)=>s+x.total,0);
+  const gastos=money.filter(m=>m.type==='gasto').reduce((s,m)=>s+m.amount,0);
+  const inv=money.filter(m=>m.type==='inversion').reduce((s,m)=>s+m.amount,0);
+  let txt='═══════════════════════════════════\n   REPORTE BRITECH\n═══════════════════════════════════\n';
+  txt+=`Fecha: ${now.toLocaleDateString('es-AR')} ${now.toLocaleTimeString('es-AR')}\n\n`;
+  txt+=`Total ventas:      ${fmt(totalV)} (${sales.length} ventas)\n`;
+  txt+=`Total envíos:      ${fmt(totalE)} (${shipments.length} envíos)\n`;
+  txt+=`Total gastos:      ${fmt(gastos)}\n`;
+  txt+=`Total inversiones: ${fmt(inv)}\n\n`;
+  txt+='─── DETALLE VENTAS ─────────────────\n';
+  sales.forEach((s,i)=>{ txt+=`${i+1}. ${s.client} — ${fmt(s.total)} (${fmtDate(s.date)})\n`; });
+  txt+='\n─── DETALLE ENVÍOS ─────────────────\n';
+  shipments.forEach((s,i)=>{ txt+=`${i+1}. ${s.client} | ${s.address} | ${s.status} — ${fmt(s.total)}\n`; });
+  txt+='\n═══════════════════════════════════\n';
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`reporte-britech-${now.toISOString().slice(0,10)}.txt`;
+  a.click();
+  toast('Reporte descargado');
+}
+
+// ══════════════ HISTORIAL ══════════════
+function renderHistorial(){ renderHistVentas(); }
+function renderHistVentas(){
+  const sales=DB.get('sales');
+  const tbody=document.getElementById('histVentasBody');
+  tbody.innerHTML=[...sales].reverse().map(v=>`<tr>
+    <td style="font-size:0.8rem;color:var(--text3)">${fmtDate(v.date)}</td>
+    <td>${v.client}</td>
+    <td><span class="badge ${v.clientType==='mayorista'?'badge-gold':'badge-gray'}">${v.clientType}</span></td>
+    <td style="font-size:0.8rem;color:var(--text3)">${(v.items||[]).map(i=>i.name).join(', ')}</td>
+    <td style="color:var(--green)">${fmt(v.total)}</td>
+  </tr>`).join('') || '<tr class="empty-row"><td colspan="5">Sin ventas.</td></tr>';
+}
+function renderHistEnvios(){
+  const s=DB.get('shipments');
+  const tbody=document.getElementById('histEnviosBody');
+  tbody.innerHTML=[...s].reverse().map(x=>`<tr>
+    <td class="font-mono" style="font-size:0.75rem;color:var(--text3)">#${x.id.slice(-6)}</td>
+    <td style="font-size:0.8rem">${fmtDate(x.date)}</td>
+    <td>${x.client}</td>
+    <td><span class="badge ${x.status==='entregado'?'badge-green':x.status==='en_camino'?'badge-blue':x.status==='cancelado'?'badge-red':'badge-orange'}">${x.status}</span></td>
+    <td style="color:var(--green)">${fmt(x.total)}</td>
+  </tr>`).join('') || '<tr class="empty-row"><td colspan="5">Sin envíos.</td></tr>';
+}
+function renderHistStock(){
+  const log=DB.get('stockLog');
+  const tbody=document.getElementById('histStockBody');
+  tbody.innerHTML=[...log].reverse().map(l=>`<tr>
+    <td style="font-size:0.8rem;color:var(--text3)">${fmtDate(l.date)}</td>
+    <td><span class="badge ${l.action==='Venta'||l.action==='Envío'?'badge-red':'badge-green'}">${l.action}</span></td>
+    <td>${l.productName}</td>
+    <td style="color:${(l.qty||0)<0?'var(--red)':'var(--green)'}; font-weight:600">${(l.qty||0)>0?'+':''}${l.qty||'—'}</td>
+  </tr>`).join('') || '<tr class="empty-row"><td colspan="4">Sin movimientos de stock.</td></tr>';
+}
+function renderHistMoney(){
+  const m=DB.get('money');
+  const tbody=document.getElementById('histMoneyBody');
+  tbody.innerHTML=[...m].reverse().map(x=>`<tr>
+    <td style="font-size:0.8rem;color:var(--text3)">${fmtDate(x.date)}</td>
+    <td><span class="badge ${x.type==='venta'?'badge-green':x.type==='gasto'?'badge-red':'badge-blue'}">${x.type}</span></td>
+    <td>${x.desc}</td>
+    <td style="color:${x.type==='gasto'?'var(--red)':'var(--green)'}; font-weight:600">${x.type==='gasto'?'-':'+'}${fmt(x.amount)}</td>
+  </tr>`).join('') || '<tr class="empty-row"><td colspan="4">Sin movimientos.</td></tr>';
+}
+
+// ══════════════ INIT ══════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderInventario();
+  const style=document.createElement('style');
+  style.textContent='@media(max-width:700px){.report-cols{grid-template-columns:1fr!important}}';
+  document.head.appendChild(style);
+  document.getElementById('invProductSel')?.addEventListener('change',function(){
+    document.getElementById('invStockField').style.display=this.value?'':'none';
+  });
+});
+</script>
+</body>
+</html>

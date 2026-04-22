@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BriTech — Sistema de gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --s950:#080808;--s900:#111111;--s850:#181818;--s800:#202020;--s750:#2a2a2a;
+  --s700:#333333;--s600:#444444;--s500:#666666;--s400:#888888;--s300:#aaaaaa;
+  --s200:#cccccc;--s100:#e0e0e0;--s50:#f5f5f5;
+}
+body{
+  font-family:'Inter',sans-serif;background:var(--s900);color:var(--s100);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:1.5rem 1rem;position:relative;overflow-x:hidden;
+}
+.bg-grid{
+  position:fixed;inset:0;
+  background-image:linear-gradient(var(--s800) 1px,transparent 1px),linear-gradient(90deg,var(--s800) 1px,transparent 1px);
+  background-size:36px 36px;opacity:.35;pointer-events:none;z-index:0;
+}
+.shell{position:relative;z-index:1;width:100%;max-width:900px;animation:fadeUp .42s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.layout{
+  display:flex;min-height:580px;border-radius:20px;overflow:hidden;
+  border:1px solid var(--s750);box-shadow:0 32px 80px rgba(0,0,0,.7);
+}
+
+/* ─── LEFT PANEL ─── */
+.left-panel{
+  flex:1;
+  background:linear-gradient(155deg,#0e0e0e 0%,#161616 50%,#0c0c0c 100%);
+  display:flex;flex-direction:column;padding:2rem;
+  position:relative;overflow:hidden;min-width:280px;
+  border-right:1px solid var(--s750);
+}
+.lp-shine{
+  position:absolute;top:-60px;right:-60px;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(220,220,220,.04) 0%,transparent 70%);
+  pointer-events:none;
+}
+.lp-brand{position:relative;z-index:1;margin-bottom:1.6rem;display:flex;align-items:center;gap:.75rem}
+.lp-name{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--s50);letter-spacing:.1em}
+.lp-tagline{font-size:.62rem;color:var(--s500);letter-spacing:.18em;text-transform:uppercase;margin-top:.2rem}
+
+/* SLIDESHOW */
+.slideshow{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
+.slide{display:none;flex-direction:column;flex:1}
+.slide.active{display:flex;animation:sIn .38s ease}
+@keyframes sIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.slide-tag{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .6rem;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;font-size:.62rem;font-weight:600;color:var(--s300);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:.8rem;width:fit-content;
+}
+.slide-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--s300)}
+.slide-title{font-size:1rem;font-weight:600;color:var(--s50);margin-bottom:.3rem}
+.slide-desc{font-size:.75rem;color:var(--s500);line-height:1.5;margin-bottom:.9rem}
+.mockup{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;padding:.9rem;flex:1;position:relative;overflow:hidden;
+}
+.mockup::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,200,200,.15),transparent);
+}
+.mk-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.7rem}
+.mk-stat{background:rgba(255,255,255,.05);border-radius:7px;padding:.45rem .6rem}
+.mk-stat-lbl{font-size:.58rem;color:var(--s500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.12rem}
+.mk-stat-val{font-family:'Space Mono',monospace;font-size:.9rem;font-weight:700;color:var(--s100)}
+.mk-row{display:flex;justify-content:space-between;align-items:center;padding:.28rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mk-row:last-child{border-bottom:none}
+.mk-label{font-size:.68rem;color:var(--s400)}
+.mk-val{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--s200)}
+.mk-val.up{color:var(--s100)}
+.mk-item{display:flex;align-items:center;gap:.55rem;padding:.32rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mk-item:last-child{border-bottom:none}
+.mk-item-bar{width:3px;height:16px;border-radius:2px;flex-shrink:0}
+.mk-item-name{font-size:.68rem;color:var(--s400);flex:1}
+.mk-badge{font-size:.62rem;padding:.16rem .42rem;border-radius:4px;font-weight:600}
+.b-ok{background:rgba(200,200,200,.12);color:var(--s200)}
+.b-low{background:rgba(160,160,160,.1);color:var(--s300)}
+.b-out{background:rgba(100,100,100,.1);color:var(--s500)}
+.mk-client{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mk-client:last-child{border-bottom:none}
+.mk-av{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;flex-shrink:0;background:rgba(150,150,150,.12);color:var(--s300);border:1px solid rgba(255,255,255,.1)}
+.mk-cname{font-size:.68rem;color:var(--s300)}
+.mk-csub{font-size:.6rem;color:var(--s500)}
+.mk-cbadge{font-size:.58rem;padding:.14rem .38rem;border-radius:4px;font-weight:600;background:rgba(200,200,200,.08);color:var(--s400)}
+.mk-buscar{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:.4rem .7rem;display:flex;align-items:center;gap:.45rem;margin-bottom:.65rem}
+.mk-buscar-ico{width:12px;height:12px;opacity:.4}
+.mk-buscar-txt{font-size:.68rem;color:var(--s600)}
+.mk-cart-lbl{font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--s600);margin-bottom:.4rem}
+.mk-citem{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mk-citem:last-of-type{border-bottom:none}
+.mk-cdot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.mk-cname2{font-size:.68rem;color:var(--s400);flex:1}
+.mk-cprice{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--s200)}
+.mk-total{display:flex;justify-content:space-between;align-items:center;margin-top:.55rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.1)}
+.mk-total-lbl{font-size:.7rem;color:var(--s500)}
+.mk-total-val{font-family:'Space Mono',monospace;font-size:.9rem;font-weight:700;color:var(--s50)}
+.mk-confirm{margin-top:.65rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:7px;padding:.45rem;text-align:center;font-size:.72rem;font-weight:600;color:var(--s100)}
+.slide-nav{display:flex;align-items:center;gap:.5rem;margin-top:1rem;position:relative;z-index:1}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.15);cursor:pointer;transition:all .22s}
+.dot.on{background:var(--s300);width:18px;border-radius:3px}
+.slide-arrows{display:flex;gap:.35rem;margin-left:auto}
+.arr-btn{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.arr-btn:hover{background:rgba(255,255,255,.1);color:var(--s100)}
+
+/* ─── RIGHT PANEL ─── */
+.right-panel{
+  background:var(--s950);width:380px;flex-shrink:0;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:2rem 1.8rem;
+}
+.view{display:none}.view.active{display:block}
+.rp-title{font-size:1.05rem;font-weight:600;color:var(--s100);margin-bottom:.18rem}
+.rp-sub{font-size:.76rem;color:var(--s500);margin-bottom:1.4rem}
+.tabs-row{display:flex;gap:.3rem;background:var(--s850);border:1px solid var(--s750);border-radius:10px;padding:.25rem;margin-bottom:1.3rem}
+.tab-btn{flex:1;padding:.44rem;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:.76rem;font-weight:500;cursor:pointer;transition:all .15s;background:transparent;color:var(--s500)}
+.tab-btn.on{background:var(--s700);color:var(--s100)}
+.field{margin-bottom:.82rem}
+.lbl{display:block;font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--s500);margin-bottom:.35rem}
+.iw{position:relative}
+.iico{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--s600);pointer-events:none}
+.inp{
+  width:100%;padding:.65rem .8rem .65rem 2.2rem;
+  background:var(--s850);border:1px solid var(--s750);border-radius:9px;
+  font-family:'Inter',sans-serif;font-size:.85rem;color:var(--s100);
+  outline:none;transition:border-color .18s,background .18s;
+}
+.inp::placeholder{color:var(--s600)}
+.inp:focus{border-color:var(--s400);background:var(--s800)}
+.inp.err-inp{border-color:#666}
+.inp.ok-inp{border-color:#555}
+.eye-btn{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--s500);padding:0;transition:color .14s}
+.eye-btn:hover{color:var(--s200)}
+.field-hint{font-size:.68rem;margin-top:.28rem;min-height:.85rem;color:var(--s500)}
+.field-hint.err{color:#888}
+.field-hint.ok{color:#777}
+.pw-strength{height:2px;border-radius:2px;margin-top:.35rem;background:var(--s750);overflow:hidden}
+.pw-bar{height:100%;border-radius:2px;width:0;transition:width .28s,background .28s}
+.forgot-row{text-align:right;margin-bottom:.9rem}
+.link-btn{background:none;border:none;font-family:'Inter',sans-serif;font-size:.73rem;color:var(--s500);cursor:pointer;text-decoration:underline;text-decoration-color:var(--s700);padding:0;transition:color .14s}
+.link-btn:hover{color:var(--s200)}
+.btn-main{
+  width:100%;padding:.75rem;border:none;border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;
+  background:var(--s100);color:var(--s900);
+  transition:opacity .15s,transform .13s;
+}
+.btn-main:hover{opacity:.88}
+.btn-main:active{transform:scale(.99)}
+.btn-main.loading{opacity:.5;cursor:wait}
+.err-box{display:none;align-items:center;gap:.45rem;padding:.58rem .85rem;background:rgba(80,80,80,.12);border:1px solid rgba(120,120,120,.2);border-radius:8px;color:var(--s400);font-size:.76rem;margin-bottom:.82rem}
+.err-box.show{display:flex}
+.ok-box{display:none;align-items:center;gap:.45rem;padding:.58rem .85rem;background:rgba(120,120,120,.1);border:1px solid rgba(160,160,160,.2);border-radius:8px;color:var(--s300);font-size:.76rem;margin-bottom:.82rem}
+.ok-box.show{display:flex}
+.divider{display:flex;align-items:center;gap:.65rem;margin:.9rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--s800)}
+.divider span{font-size:.65rem;color:var(--s600)}
+.soc-btns{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.btn-soc{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.62rem;background:var(--s850);border:1px solid var(--s750);border-radius:9px;font-family:'Inter',sans-serif;font-size:.77rem;font-weight:500;color:var(--s300);cursor:pointer;transition:all .15s}
+.btn-soc:hover{background:var(--s800);border-color:var(--s600)}
+.btn-soc svg{width:14px;height:14px;flex-shrink:0}
+.toast-area{position:fixed;bottom:1.2rem;right:1.2rem;z-index:99}
+.toast{padding:.6rem .95rem;border-radius:9px;font-size:.78rem;font-weight:500;border:1px solid;margin-top:.35rem;animation:tIn .22s ease}
+@keyframes tIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.toast.s{background:rgba(15,15,15,.97);color:var(--s200);border-color:var(--s700)}
+.toast.e{background:rgba(15,15,15,.97);color:var(--s400);border-color:var(--s800)}
+.toast.i{background:rgba(15,15,15,.97);color:var(--s300);border-color:var(--s750)}
+.footer{text-align:center;margin-top:1rem;font-size:.64rem;color:var(--s700);letter-spacing:.04em}
+@media(max-width:650px){
+  .left-panel{display:none}
+  .right-panel{width:100%}
+  .layout{border-radius:16px;min-height:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="shell">
+  <div class="layout">
+
+    <!-- ═══ LEFT PANEL — SLIDESHOW ═══ -->
+    <div class="left-panel">
+      <div class="lp-shine"></div>
+
+      <div class="lp-brand">
+        <!-- Reemplazá "britechlogo.png" con la ruta real de tu logo -->
+        <img src="britechlogo.png" alt="BriTech" style="width:50px;height:50px;object-fit:contain;filter:invert(1) brightness(.85);border-radius:10px">
+        <div>
+          <div class="lp-name">BRITECH</div>
+          <div class="lp-tagline">Sistema de gestión interna</div>
+        </div>
+      </div>
+
+      <div class="slideshow">
+
+        <!-- SLIDE 1: Ventas -->
+        <div class="slide active" id="slide-0">
+          <div class="slide-tag"><div class="slide-tag-dot"></div>Módulo 01</div>
+          <div class="slide-title">Gestión de ventas</div>
+          <div class="slide-desc">Registrá pedidos, emitís comprobantes y hacés seguimiento de cada venta en tiempo real.</div>
+          <div class="mockup">
+            <div class="mk-stat-row">
+              <div class="mk-stat"><div class="mk-stat-lbl">Hoy</div><div class="mk-stat-val">$142.800</div></div>
+              <div class="mk-stat"><div class="mk-stat-lbl">Pedidos</div><div class="mk-stat-val">24</div></div>
+            </div>
+            <div class="mk-row"><span class="mk-label">Electro Norte SA</span><span class="mk-val">$28.500</span></div>
+            <div class="mk-row"><span class="mk-label">Construmat SRL</span><span class="mk-val">$14.200</span></div>
+            <div class="mk-row"><span class="mk-label">Iluminarte</span><span class="mk-val">$9.750</span></div>
+            <div class="mk-row"><span class="mk-label">TecnoHogar</span><span class="mk-val up">$18.300 ↑</span></div>
+          </div>
+        </div>
+
+        <!-- SLIDE 2: Inventario -->
+        <div class="slide" id="slide-1">
+          <div class="slide-tag"><div class="slide-tag-dot"></div>Módulo 02</div>
+          <div class="slide-title">Control de inventario</div>
+          <div class="slide-desc">Visualizá el stock disponible, recibí alertas y administrá productos eléctricos fácilmente.</div>
+          <div class="mockup">
+            <div class="mk-item"><div class="mk-item-bar" style="background:#888"></div><span class="mk-item-name">Cable UTP Cat6 (rollo 100m)</span><span class="mk-badge b-ok">38 u.</span></div>
+            <div class="mk-item"><div class="mk-item-bar" style="background:#555"></div><span class="mk-item-name">Disyuntor termomag. 20A</span><span class="mk-badge b-low">9 u. ⚠</span></div>
+            <div class="mk-item"><div class="mk-item-bar" style="background:#aaa"></div><span class="mk-item-name">Tomacorriente doble 10A</span><span class="mk-badge b-ok">124 u.</span></div>
+            <div class="mk-item"><div class="mk-item-bar" style="background:#333"></div><span class="mk-item-name">Tablero eléctrico 12 cktos.</span><span class="mk-badge b-out">Sin stock</span></div>
+            <div class="mk-item"><div class="mk-item-bar" style="background:#777"></div><span class="mk-item-name">Cinta aisladora 20m</span><span class="mk-badge b-ok">210 u.</span></div>
+          </div>
+        </div>
+
+        <!-- SLIDE 3: Clientes -->
+        <div class="slide" id="slide-2">
+          <div class="slide-tag"><div class="slide-tag-dot"></div>Módulo 03</div>
+          <div class="slide-title">Gestión de clientes</div>
+          <div class="slide-desc">Administrá mayoristas y minoristas, consultá historial y asigná listas de precio diferenciadas.</div>
+          <div class="mockup">
+            <div class="mk-client"><div class="mk-av">EN</div><div style="flex:1"><div class="mk-cname">Electro Norte SA</div><div class="mk-csub">52 pedidos · $318.000</div></div><span class="mk-cbadge">Mayorista</span></div>
+            <div class="mk-client"><div class="mk-av">RL</div><div style="flex:1"><div class="mk-cname">Roberto López</div><div class="mk-csub">8 pedidos · $22.400</div></div><span class="mk-cbadge">Minorista</span></div>
+            <div class="mk-client"><div class="mk-av">CM</div><div style="flex:1"><div class="mk-cname">Construmat SRL</div><div class="mk-csub">37 pedidos · $204.500</div></div><span class="mk-cbadge">Mayorista</span></div>
+            <div class="mk-client"><div class="mk-av">IL</div><div style="flex:1"><div class="mk-cname">Iluminarte</div><div class="mk-csub">15 pedidos · $41.200</div></div><span class="mk-cbadge">Minorista</span></div>
+          </div>
+        </div>
+
+        <!-- SLIDE 4: Carrito -->
+        <div class="slide" id="slide-3">
+          <div class="slide-tag"><div class="slide-tag-dot"></div>Módulo 04</div>
+          <div class="slide-title">Realizá tu pedido</div>
+          <div class="slide-desc">Buscá productos eléctricos, agregá al carrito y confirmá tu compra en pocos pasos.</div>
+          <div class="mockup">
+            <div class="mk-buscar">
+              <svg class="mk-buscar-ico" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span class="mk-buscar-txt">Buscar producto eléctrico…</span>
+            </div>
+            <div class="mk-cart-lbl">Tu carrito</div>
+            <div class="mk-citem"><div class="mk-cdot" style="background:#888"></div><span class="mk-cname2">Cable UTP Cat6 · x10 rollos</span><span class="mk-cprice">$8.500</span></div>
+            <div class="mk-citem"><div class="mk-cdot" style="background:#666"></div><span class="mk-cname2">Disyuntor 20A · x5 u.</span><span class="mk-cprice">$6.200</span></div>
+            <div class="mk-citem"><div class="mk-cdot" style="background:#aaa"></div><span class="mk-cname2">Tomacorriente doble · x8 u.</span><span class="mk-cprice">$3.900</span></div>
+            <div class="mk-total"><span class="mk-total-lbl">Total del pedido</span><span class="mk-total-val">$18.600</span></div>
+            <div class="mk-confirm">Confirmar pedido →</div>
+          </div>
+        </div>
+
+        <div class="slide-nav">
+          <div class="dot on" onclick="gS(0);rA()"></div>
+          <div class="dot" onclick="gS(1);rA()"></div>
+          <div class="dot" onclick="gS(2);rA()"></div>
+          <div class="dot" onclick="gS(3);rA()"></div>
+          <div class="slide-arrows">
+            <button class="arr-btn" onclick="pS();rA()">←</button>
+            <button class="arr-btn" onclick="nS();rA()">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT PANEL ═══ -->
+    <div class="right-panel">
+
+      <!-- AUTH VIEW -->
+      <div id="v-auth" class="view active">
+        <div class="rp-title">Bienvenido/a</div>
+        <div class="rp-sub">Ingresá tus credenciales para continuar</div>
+
+        <div class="tabs-row">
+          <button class="tab-btn on" id="tab-login" onclick="swTab('login')">Iniciar sesión</button>
+          <button class="tab-btn" id="tab-reg" onclick="swTab('register')">Crear cuenta</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="pane-login">
+          <div class="err-box" id="login-err"><span>⚠</span><span id="login-err-txt"></span></div>
+          <div class="field">
+            <label class="lbl">Correo</label>
+            <div class="iw">
+              <span class="iico">✉</span>
+              <input class="inp" type="email" id="l-email" placeholder="tu@correo.com" autocomplete="username">
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl">Contraseña</label>
+            <div class="iw">
+              <span class="iico">🔒</span>
+              <input class="inp" type="password" id="l-pw" placeholder="••••••••" autocomplete="current-password">
+              <button class="eye-btn" onclick="tEye('l-pw',this)">👁</button>
+            </div>
+          </div>
+          <div class="forgot-row">
+            <button class="link-btn" onclick="gV('v-recover')">¿Olvidaste tu contraseña?</button>
+          </div>
+          <button class="btn-main" id="l-btn" onclick="doLogin()">Iniciar sesión →</button>
+          <div class="divider"><span>o continuá con</span></div>
+          <div class="soc-btns">
+            <button class="btn-soc" onclick="socAuth('Google')">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Google
+            </button>
+            <button class="btn-soc" onclick="socAuth('iCloud')">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              iCloud
+            </button>
+          </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="pane-register" style="display:none">
+          <div class="err-box" id="reg-err"><span>⚠</span><span id="reg-err-txt"></span></div>
+          <div class="ok-box" id="reg-ok"><span>✓</span><span id="reg-ok-txt"></span></div>
+          <div class="field">
+            <label class="lbl">Nombre completo</label>
+            <div class="iw"><span class="iico">👤</span><input class="inp" type="text" id="r-name" placeholder="Juan García" oninput="vNm()" autocomplete="name"></div>
+            <div class="field-hint" id="r-name-h"></div>
+          </div>
+          <div class="field">
+            <label class="lbl">Correo</label>
+            <div class="iw"><span class="iico">✉</span><input class="inp" type="email" id="r-email" placeholder="tu@correo.com" oninput="vEm()" autocomplete="email"></div>
+            <div class="field-hint" id="r-email-h"></div>
+          </div>
+          <div class="field">
+            <label class="lbl">Contraseña</label>
+            <div class="iw">
+              <span class="iico">🔒</span>
+              <input class="inp" type="password" id="r-pw" placeholder="Mín. 8 caracteres" oninput="vPw()" autocomplete="new-password">
+              <button class="eye-btn" onclick="tEye('r-pw',this)">👁</button>
+            </div>
+            <div class="pw-strength"><div class="pw-bar" id="pw-bar"></div></div>
+            <div class="field-hint" id="r-pw-h"></div>
+          </div>
+          <div class="field">
+            <label class="lbl">Confirmar contraseña</label>
+            <div class="iw">
+              <span class="iico">🔒</span>
+              <input class="inp" type="password" id="r-pw2" placeholder="Repetí tu contraseña" oninput="vPw2()" autocomplete="new-password">
+              <button class="eye-btn" onclick="tEye('r-pw2',this)">👁</button>
+            </div>
+            <div class="field-hint" id="r-pw2-h"></div>
+          </div>
+          <button class="btn-main" id="r-btn" onclick="doReg()" style="margin-top:.25rem">Crear cuenta →</button>
+        </div>
+      </div>
+
+      <!-- RECOVER VIEW -->
+      <div id="v-recover" class="view">
+        <div style="font-size:1.8rem;text-align:center;margin-bottom:.65rem">🔑</div>
+        <div class="rp-title" style="text-align:center">Recuperar contraseña</div>
+        <div class="rp-sub" style="text-align:center;margin-bottom:1rem">Ingresá tu correo y te enviamos un link para resetear tu contraseña</div>
+        <div class="ok-box" id="rec-ok"><span>✓</span><span id="rec-ok-txt"></span></div>
+        <div class="err-box" id="rec-err"><span>⚠</span><span id="rec-err-txt"></span></div>
+        <div class="field">
+          <label class="lbl">Correo</label>
+          <div class="iw"><span class="iico">✉</span><input class="inp" type="email" id="rec-email" placeholder="tu@correo.com"></div>
+        </div>
+        <button class="btn-main" id="rec-btn" onclick="doRec()" style="margin-bottom:.85rem">Enviar link →</button>
+        <div style="text-align:center"><button class="link-btn" onclick="gV('v-auth')">← Volver al login</button></div>
+      </div>
+
+      <!-- SUCCESS VIEW -->
+      <div id="v-success" class="view" style="text-align:center">
+        <div style="font-size:2.2rem;margin-bottom:.65rem">✓</div>
+        <div class="rp-title" style="margin-bottom:.35rem">¡Cuenta creada!</div>
+        <div class="rp-sub" style="margin-bottom:1.4rem">Bienvenido/a a BriTech. Ya podés iniciar sesión.</div>
+        <button class="btn-main" onclick="gV('v-auth');swTab('login')">Ir al login →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">BriTech &copy; 2025 — Sistema interno</div>
+</div>
+
+<div class="toast-area" id="toasts"></div>
+
+<script>
+/* ─── USUARIOS DEMO (solo para pruebas) ─── */
+const DEMO = [
+  { email: 'admin@britech.com',      password: '1234', nombre: 'Admin',          rol: 'admin'      },
+  { email: 'minorista@demo.com',     password: '1234', nombre: 'Juan Pérez',     rol: 'minorista'  },
+  { email: 'mayorista@demo.com',     password: '1234', nombre: 'Electro Norte SA', rol: 'mayorista' },
+];
+let reg = [], cur = 0, tot = 4, aT;
+
+/* ─── SLIDESHOW ─── */
+function gS(n) {
+  document.querySelectorAll('.slide').forEach((s, i) => s.classList.toggle('active', i === n));
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === n));
+  cur = n;
+}
+function nS() { gS((cur + 1) % tot); }
+function pS() { gS((cur - 1 + tot) % tot); }
+function rA() { clearInterval(aT); aT = setInterval(nS, 4200); }
+aT = setInterval(nS, 4200);
+
+/* ─── NAVEGACIÓN ─── */
+function gV(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function swTab(t) {
+  document.getElementById('tab-login').classList.toggle('on', t === 'login');
+  document.getElementById('tab-reg').classList.toggle('on', t === 'register');
+  document.getElementById('pane-login').style.display    = t === 'login'    ? 'block' : 'none';
+  document.getElementById('pane-register').style.display = t === 'register' ? 'block' : 'none';
+}
+
+/* ─── HELPERS ─── */
+function tEye(id, b) {
+  const i = document.getElementById(id);
+  i.type = i.type === 'password' ? 'text' : 'password';
+  b.textContent = i.type === 'password' ? '👁' : '🙈';
+}
+function sH(id, msg, t) { const e = document.getElementById(id); e.textContent = msg; e.className = 'field-hint' + (t ? ' ' + t : ''); }
+function sI(id, s) { const e = document.getElementById(id); e.classList.remove('err-inp', 'ok-inp'); if (s) e.classList.add(s === 'err' ? 'err-inp' : 'ok-inp'); }
+function sErr(b, t, m) { document.getElementById(b).classList.add('show'); document.getElementById(t).textContent = m; setTimeout(() => document.getElementById(b).classList.remove('show'), 3800); }
+function sOk(b, t, m)  { document.getElementById(b).classList.add('show'); document.getElementById(t).textContent = m; setTimeout(() => document.getElementById(b).classList.remove('show'), 4200); }
+function toast(m, t = 'i') {
+  const w = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + t;
+  el.textContent = m;
+  w.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .22s'; setTimeout(() => el.remove(), 230); }, 2600);
+}
+
+/* ─── VALIDACIONES ─── */
+function vNm() {
+  const v = document.getElementById('r-name').value.trim();
+  const ok = v.length >= 3 && /\s/.test(v);
+  sI('r-name', v.length > 0 ? (ok ? 'ok' : 'err') : '');
+  sH('r-name-h', v.length === 0 ? '' : ok ? '✓ Nombre válido' : 'Ingresá nombre y apellido', v.length > 0 ? (ok ? 'ok' : 'err') : '');
+  return ok;
+}
+function vEm() {
+  const v = document.getElementById('r-email').value.trim();
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(v);
+  const ex = reg.some(u => u.email === v) || DEMO.some(u => u.email === v);
+  const msg = v.length === 0 ? '' : ex ? 'Correo ya registrado' : ok ? '✓ Correo válido' : 'Formato inválido';
+  const tp  = v.length === 0 ? '' : (!ok || ex) ? 'err' : 'ok';
+  sI('r-email', v.length > 0 ? tp : '');
+  sH('r-email-h', msg, tp);
+  return ok && !ex;
+}
+function pwStr(pw) {
+  let s = 0;
+  if (pw.length >= 8)           s++;
+  if (/[A-Z]/.test(pw))         s++;
+  if (/[0-9]/.test(pw))         s++;
+  if (/[^A-Za-z0-9]/.test(pw))  s++;
+  return s;
+}
+function vPw() {
+  const v = document.getElementById('r-pw').value;
+  const s = pwStr(v);
+  const bar = document.getElementById('pw-bar');
+  bar.style.width      = v.length === 0 ? '0' : (s * 25) + '%';
+  bar.style.background = v.length === 0 ? '' : ['', '#555', '#777', '#999', '#bbb'][s];
+  const ok = s >= 3 && v.length >= 8;
+  sI('r-pw', v.length > 0 ? (ok ? 'ok' : 'err') : '');
+  sH('r-pw-h', v.length === 0 ? '' : (ok ? '✓ Contraseña fuerte' : 'Agregá mayúsculas, números o símbolos'), v.length > 0 ? (ok ? 'ok' : 'err') : '');
+  vPw2();
+  return ok;
+}
+function vPw2() {
+  const p1 = document.getElementById('r-pw').value;
+  const p2 = document.getElementById('r-pw2').value;
+  if (!p2) return false;
+  const ok = p1 === p2;
+  sI('r-pw2', ok ? 'ok' : 'err');
+  sH('r-pw2-h', ok ? '✓ Coinciden' : 'No coinciden', ok ? 'ok' : 'err');
+  return ok;
+}
+
+/* ─── AUTH ─── */
+async function doLogin() {
+  const e   = document.getElementById('l-email').value.trim();
+  const p   = document.getElementById('l-pw').value;
+  const btn = document.getElementById('l-btn');
+  if (!e || !p) { sErr('login-err', 'login-err-txt', 'Completá todos los campos'); return; }
+  btn.classList.add('loading'); btn.textContent = 'Verificando...';
+  await new Promise(r => setTimeout(r, 800));
+  btn.classList.remove('loading'); btn.textContent = 'Iniciar sesión →';
+  const u = [...DEMO, ...reg].find(x => x.email === e && x.password === p);
+  if (!u) { sErr('login-err', 'login-err-txt', 'Correo o contraseña incorrectos'); return; }
+  toast('Bienvenido/a, ' + u.nombre + ' ✓', 's');
+  /* Redirigir según rol: */
+  /* setTimeout(() => { window.location.href = u.rol === 'admin' ? 'admin-dashboard.html' : 'store.html'; }, 950); */
+}
+async function doReg() {
+  const nOk = vNm(), eOk = vEm(), pOk = vPw(), p2Ok = vPw2();
+  if (!nOk || !eOk || !pOk || !p2Ok) { sErr('reg-err', 'reg-err-txt', 'Revisá los campos marcados'); return; }
+  const btn = document.getElementById('r-btn');
+  btn.classList.add('loading'); btn.textContent = 'Creando cuenta...';
+  await new Promise(r => setTimeout(r, 1000));
+  btn.classList.remove('loading'); btn.textContent = 'Crear cuenta →';
+  reg.push({
+    email:    document.getElementById('r-email').value.trim(),
+    password: document.getElementById('r-pw').value,
+    nombre:   document.getElementById('r-name').value.trim(),
+    rol:      'minorista'
+  });
+  gV('v-success');
+}
+async function doRec() {
+  const e   = document.getElementById('rec-email').value.trim();
+  const btn = document.getElementById('rec-btn');
+  if (!e) { sErr('rec-err', 'rec-err-txt', 'Ingresá tu correo'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(e)) { sErr('rec-err', 'rec-err-txt', 'Correo inválido'); return; }
+  btn.classList.add('loading'); btn.textContent = 'Enviando...';
+  await new Promise(r => setTimeout(r, 900));
+  btn.classList.remove('loading'); btn.textContent = 'Enviar link →';
+  sOk('rec-ok', 'rec-ok-txt', 'Link enviado a ' + e + '. Revisá tu bandeja.');
+  document.getElementById('rec-email').value = '';
+}
+function socAuth(p) {
+  toast('Conectando con ' + p + '...', 'i');
+  setTimeout(() => toast('(Demo) ' + p + ' Auth no conectado', 'e'), 1100);
+}
+
+/* ─── ENTER KEY ─── */
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return;
+  const v = document.querySelector('.view.active')?.id;
+  if (v === 'v-auth') {
+    const isLogin = document.getElementById('pane-login').style.display !== 'none';
+    isLogin ? doLogin() : doReg();
+  } else if (v === 'v-recover') {
+    doRec();
+  }
+});
+</script>
+</body>
+</html>

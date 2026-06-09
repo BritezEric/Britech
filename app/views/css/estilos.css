@@ -1,0 +1,536 @@
+/*=====================================================
+                    Tipografía
+======================================================*/
+@font-face {
+    font-family: "RobotoCondensedLight";
+    src: url("../webfonts/robotocondensed-light.ttf"),
+         url("../webfonts/robotocondensed-light.woff2"),
+         url("../webfonts/robotocondensed-light.woff");
+}
+@font-face {
+    font-family: "RobotoRegular";
+    src: url("../webfonts/roboto-regular.ttf"),
+         url("../webfonts/roboto-regular.woff2"),
+         url("../webfonts/roboto-regular.woff");
+}
+@font-face {
+    font-family: "OswaldLight";
+    src: url("../webfonts/oswald-light.ttf"),
+         url("../webfonts/oswald-light.woff2"),
+         url("../webfonts/oswald-light.woff");
+}
+
+/*=====================================================
+                    Variables
+======================================================*/
+:root {
+    --bg-primary:    #0d0d0f;
+    --bg-secondary:  #131316;
+    --bg-tertiary:   #1a1a1f;
+    --bg-elevated:   #1f1f26;
+    --bg-hover:      #25252e;
+
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-soft:   rgba(255, 255, 255, 0.08);
+    --border-mid:    rgba(255, 255, 255, 0.12);
+
+    --accent:        #6c63ff;
+    --accent-dim:    rgba(108, 99, 255, 0.15);
+    --accent-glow:   rgba(108, 99, 255, 0.08);
+
+    --text-primary:  #e8e8f0;
+    --text-secondary:#9090a8;
+    --text-muted:    #55556a;
+    --text-on-accent:#ffffff;
+
+    --nav-height:    48px;
+    --nav-width:     280px;
+    --radius-sm:     6px;
+    --radius-md:     10px;
+    --radius-lg:     14px;
+
+    --transition:    all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*=====================================================
+                    Reset & Base
+======================================================*/
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    font-size: 15px;
+    font-family: "RobotoRegular", system-ui, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/*=====================================================
+                    Utilidades
+======================================================*/
+.text-condensedLight { font-family: "RobotoCondensedLight"; }
+.tittles            { font-family: "OswaldLight"; letter-spacing: 0.03em; }
+.full-width         { width: 100%; }
+.img-responsive     { width: 100%; height: auto; display: block; }
+
+.list-unstyle {
+    list-style: none;
+}
+
+.divider-menu-h {
+    height: 1px;
+    background: var(--border-subtle);
+    width: 88%;
+    margin: 4px auto;
+}
+
+/*=====================================================
+                    Login / Auth
+======================================================*/
+.main-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-primary);
+    background-image:
+        radial-gradient(ellipse 60% 50% at 30% 40%, rgba(108, 99, 255, 0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 80% 70%, rgba(108, 99, 255, 0.04) 0%, transparent 60%);
+}
+
+.main-container > .login,
+.main-container > .hero-body {
+    width: 100%;
+    max-width: 400px;
+    min-width: 300px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+}
+
+.is-photo {
+    max-width: 280px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+/*=====================================================
+                    Layout principal
+======================================================*/
+.page-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+/*=====================================================
+                    Scrollbar
+======================================================*/
+.scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scroll::-webkit-scrollbar-thumb {
+    background: var(--border-mid);
+    border-radius: 99px;
+}
+.scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/*=====================================================
+                    Navbar superior
+======================================================*/
+.navBar {
+    height: var(--nav-height);
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.navBar-options {
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    transition: var(--transition);
+}
+
+.navBar-options .fa-exchange-alt {
+    width: 40px;
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    user-select: none;
+    flex-shrink: 0;
+}
+.navBar-options .fa-exchange-alt:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.navBar-options-list {
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+}
+.navBar-options-list ul {
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.navBar-options-list ul li {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    user-select: none;
+    outline: none;
+}
+.navBar-options-list ul li:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+.navBar-options-list ul li a {
+    color: inherit;
+}
+.navBar-options-list ul li img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border-mid);
+    object-fit: cover;
+    display: block;
+}
+.navBar-options-list .noLink {
+    cursor: default;
+}
+
+/*=====================================================
+                    Nav lateral + contenido
+======================================================*/
+.navLateral,
+.pageContent,
+.navLateral-body {
+    height: 100%;
+}
+.navLateral,
+.pageContent {
+    overflow-y: auto;
+}
+
+/*=====================================================
+                    Nav lateral
+======================================================*/
+.navLateral {
+    width: var(--nav-width);
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    transition: var(--transition);
+    position: relative;
+    z-index: 10;
+}
+.navLateral-change {
+    pointer-events: none;
+    opacity: 0;
+    width: 0;
+    border-right: none;
+    overflow: hidden;
+}
+
+.navLateral-body {
+    background-color: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+}
+
+.navLateral-body-logo {
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+/* Perfil de usuario en sidebar */
+.navLateral-body-cl,
+.navLateral-body-cr {
+    display: flex;
+    align-items: center;
+}
+.navLateral-body-cl {
+    width: 52px;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.navLateral-body-cl img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-mid);
+    object-fit: cover;
+}
+.navLateral-body-cr {
+    flex: 1;
+    min-width: 0;
+    font-family: "RobotoCondensedLight";
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navLateral-body-tittle-menu {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background-color: transparent;
+    user-select: none;
+    margin-top: 8px;
+}
+
+/*=====================================================
+                    Menú principal
+======================================================*/
+.menu-principal {
+    padding: 8px 8px;
+    flex: 1;
+}
+.menu-principal li {
+    display: block;
+}
+.menu-principal li a {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+.menu-principal li a:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+/* Íconos dentro del menú */
+.menu-principal li a div.navLateral-body-cl {
+    width: 44px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.menu-principal li a div.navLateral-body-cr {
+    height: 40px;
+    font-size: 14px;
+    font-family: "RobotoRegular";
+    color: inherit;
+}
+
+/* Flecha submenu */
+.btn-subMenu span.fa-chevron-down {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s;
+}
+.btn-subMenu-show span.fa-chevron-down {
+    transform: translateY(-50%) rotate(180deg);
+    color: var(--accent);
+}
+
+/* Estado activo sidebar item */
+.btn-subMenu-show {
+    background: var(--accent-dim) !important;
+    color: var(--text-primary) !important;
+}
+.btn-subMenu-show .navLateral-body-cl,
+.btn-subMenu-show .navLateral-body-cr {
+    color: var(--text-primary);
+}
+
+/* Indicador izquierdo activo */
+.btn-subMenu-show::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    height: 60%;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+}
+
+/*=====================================================
+                    Submenú
+======================================================*/
+.sub-menu-options {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    margin: 0 8px;
+}
+
+.btn-subMenu + .sub-menu-options {
+    transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-subMenu-show + .sub-menu-options {
+    height: auto;
+    overflow: visible;
+}
+
+.sub-menu-options li a {
+    height: 36px;
+    font-size: 13px;
+    padding-left: 44px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    border-left: none;
+    position: relative;
+}
+.sub-menu-options li a::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transform: translateY(-50%);
+    transition: background 0.2s;
+}
+.sub-menu-options li a:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+.sub-menu-options li a:hover::before {
+    background: var(--accent);
+}
+
+/*=====================================================
+                    Contenido de página
+======================================================*/
+.pageContent {
+    flex: 1;
+    min-width: 0;
+    background-color: var(--bg-primary);
+    transition: var(--transition);
+}
+.pageContent-change {
+    width: 100%;
+}
+
+/*=====================================================
+                    Detalle de venta
+======================================================*/
+.sale-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 14px;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+.sale-details:hover {
+    background-color: var(--bg-elevated);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+}
+
+/*=====================================================
+                    Media Queries
+======================================================*/
+@media (max-width: 750px) {
+    .navLateral {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateX(-100%);
+        z-index: 100;
+    }
+    .navLateral-change {
+        width: var(--nav-width);
+        pointer-events: auto;
+        opacity: 1;
+        transform: translateX(0);
+    }
+    .pageContent {
+        width: 100%;
+    }
+    .pageContent-change {
+        width: 100%;
+    }
+
+    /* Overlay al abrir nav en móvil */
+    .navLateral-change ~ .pageContent::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+    }
+}
